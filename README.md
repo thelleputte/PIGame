@@ -4,6 +4,13 @@ Hello les zoulous
 
 ## GIT
 
+### The super basics
+Un petit tuto-lunch pour se (re-)familiariser avec Git(hub)
+- first: https://guides.github.com/activities/hello-world/
+- then: https://guides.github.com/introduction/flow/
+
+### Working locally
+
 Pour initier votre repository git en local, c'est ceci:
     
     cd /le-repertoire-parent-de-votre-repertoir-souhaité
