@@ -1,0 +1,27 @@
+/*
+[class*="col"] {
+	margin-bottom: 20px;
+}
+*/
+img {
+	width: 100%;
+}
+
+body {
+	padding-top: 100px;
+}
+
+.navbar-pigame {
+	background-color: #f2a4e5;
+	border-color: #f2a4e5;
+}
+
+.starter-template {
+	padding: 40px 15px;
+	text-align: center;
+}
+
+.jumbotron {
+	/* color: #533; */
+	background-color: #f2a4e5
+}

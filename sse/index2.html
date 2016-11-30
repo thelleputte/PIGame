@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<title>HTML5 Server-Sent Demo</title>
+<style>
+</style>
+</head>
+<body>
+
+<h1>Getting server updates</h1>
+<div id="result"></div>
+<br>
+<button onclick="closeConnection()">Stop (re)connections</button>
+
+
+<script>
+if(typeof(EventSource) !== "undefined") {
+    var source = new EventSource("sse2.php");
+    source.onmessage = function(event) {
+        document.getElementById("result").innerHTML += event.data + "<br>";
+    };
+} else {
+    document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
+}
+
+function closeConnection() {
+    source.close();
+    //logger.log('> Connection was closed');
+    //updateConnectionStatus('Disconnected', false);
+}
+
+</script>
+
+</body>
+</html>
