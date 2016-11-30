@@ -15,7 +15,7 @@ if ($socket === false) {
     echo "socket_connect() a échoué : raison : ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
 } else {
 	echo $socket;
-    echo "OK.\n";
+    echo "OK".PHP_EOL;
 }
 
 $in = "HEAD / HTTP/1.0\r\n\r\n";
