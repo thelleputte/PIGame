@@ -5,11 +5,13 @@ import select
 import socket
 import sys
 import queue
+import time
+
 try :
 	# Create a TCP/IP socket
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.setblocking(0)
-
+	maxMessages = 100
 	# Bind the socket to the port
 	server_address = ('localhost', 10000)
 	print('starting up on {} port {}\n'.format(server_address[0], server_address[1]))
@@ -24,9 +26,10 @@ try :
 	outputs = [ ]
 	# Outgoing message queues (socket:Queue)
 	message_queues = {}
+	ind = 0
 	while inputs:
 		# Wait for at least one of the sockets to be ready for processing
-		print('waiting for the next event\n')
+		#print('waiting for the next event\n')
 		readable, writable, exceptional = select.select(inputs, outputs, inputs,2)
 		 # Handle inputs
 		for s in readable:
@@ -61,21 +64,25 @@ try :
 		for s in writable:
 			try:
 				next_msg = message_queues[s].get_nowait()
+				if ind < maxMessages:
+					message_queues[s].put(str(time.time()).encode('utf-8'))
+					ind +=1
+
 			except queue.Empty:
 				# No messages waiting so stop checking for writability.
 				print('output queue for '+ str(s.getpeername()) + ' is empty')
 				outputs.remove(s)
 			else:
-				try:
-					print('sending {} to {}'.format(next_msg, s.getpeername()))
-					s.send(next_msg)
-				except:
-					print ('outch socket already dead')
-					if s in inputs :
-						inputs.remove(s)
-					if s in outputs :
-						outputs.remove(s)
-						del message_queues[s]
+				#try:
+				print('sending {} to {}'.format(next_msg, s.getpeername()))
+				s.send(next_msg)
+				#except :
+					# print ('outch socket already dead')
+					# if s in inputs :
+					# 	inputs.remove(s)
+					# if s in outputs :
+					# 	outputs.remove(s)
+					# 	del message_queues[s]
 		# Handle "exceptional conditions"
 		for s in exceptional:
 			print('handling exceptional condition for ' + str(s.getpeername()))

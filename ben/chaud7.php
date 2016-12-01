@@ -1,6 +1,9 @@
 <?php
 /* Crée un socket TCP/IP. */
 header( 'Content-type: text/plain; charset=utf-8' );
+header( 'Content-Encoding: none; ' ); //disable apache compressed
+ob_end_flush();
+ob_start();
 $address = "127.0.0.1";
 $service_port = 10000;
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -13,7 +16,6 @@ if ($socket === false) {
 echo "Essai de connexion à ".$address." sur le port ".$service_port." ...";
 $result = socket_connect($socket, $address, $service_port);
 error_log("result = ".$result);
-sleep(10);
 if ($socket === false || $result="" || !$result) {
     echo "socket_connect() a échoué : raison : ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
 	$socket = null;
@@ -39,12 +41,14 @@ $except = array($socket);
 //while (True){	
 	$num_changed_sockets = socket_select($read, $write, $except, 5);
 while ($num_changed_sockets){
-	$timeout = (5);
+	$timeout = 5;
 	if ($num_changed_sockets === false) {
 	  /* Gestion des erreurs */
 	  error_log("errors we should break\n");
 	  for ($i=0 ; $i<count($read) ; $i++){
 		  echo socket_last_error($read($i));
+		  flush();
+		  ob_flush();
 		  socket_close($read($i));
 		  break;// un peu rude mais à tester
 	  }
@@ -56,8 +60,10 @@ while ($num_changed_sockets){
 		  $data=socket_read($read[$i],1024);
 		  error_log("data : " .$data."\n");
 		  echo $data;
-		  flush();
+		  echo 'rand  '.rand(0,100).PHP_EOL;
+		  
 		  ob_flush();
+		  flush();
 	  }
 	  for ($i=0 ; $i<count($write) ; $i++){
 		  error_log("i_write = ".$i);
