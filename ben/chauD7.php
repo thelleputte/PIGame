@@ -1,5 +1,6 @@
 <?php
 /* Crée un socket TCP/IP. */
+header( 'Content-type: text/plain; charset=utf-8' );
 $address = "127.0.0.1";
 $service_port = 10000;
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -23,14 +24,74 @@ $in .= "Host: www.example.com\r\n";
 $in .= "Connection: Close\r\n\r\n";
 $out = '';
 
-echo "Envoi de la requête HTTP HEAD...";
+echo "Envoi de la requête HTTP HEAD...".PHP_EOL;
 socket_write($socket, $in, strlen($in));
 echo "OK.\n";
 
-echo "Lire la réponse : \n\n";
-while ($out = socket_read($socket, 2048)) {
-    echo $out;
+/* Prépare le tableau read (socket surveillées en lecture) */
+$read   = array($socket);
+$write  = null;//array($socket);
+$except = array($socket);
+//socket_set_nonblock($socket);
+//while (True){	
+	$num_changed_sockets = socket_select($read, $write, $except, 5);
+while ($num_changed_sockets){
+	$timeout = (5);
+	if ($num_changed_sockets === false) {
+	  /* Gestion des erreurs */
+	  error_log("errors we should break\n");
+	  for ($i=0 ; $i<count($read) ; $i++){
+		  echo socket_last_error($read($i));
+		  socket_close($read($i));
+		  break;// un peu rude mais à tester
+	  }
+	} else if ($num_changed_sockets > 0) {
+	  /* Au moins une des sockets a été modifiée */
+	  error_log("socket has changed = ".$num_changed_sockets.'\n');
+	  for ($i=0 ; $i<count($read) ; $i++){
+		  error_log("i = ".$i);
+		  $data=socket_read($read[$i],1024);
+		  error_log($data."\n");
+		  echo $data;
+		  flush();
+		  ob_flush();
+	  }
+	  for ($i=0 ; $i<count($write) ; $i++){
+		  error_log("i_write = ".$i);
+		  //$data=socket_read($read[$i],1024);
+		  //error_log($data."\n");
+		  //echo $data;
+		  flush();
+		  ob_flush();
+	  }
+	  for ($i=0 ; $i<count($except) ; $i++){
+		  error_log("i except= ".$i);
+		  //$data=socket_read($read[$i],1024);
+		  //error_log($data."\n");
+		  echo $data;
+		  flush();
+		  ob_flush();
+	  }
+	$read   = array($socket);
+	$write  = null;//array($socket);
+	$except = array($socket);
+	$num_changed_sockets = socket_select($read, $write, $except,(int) $timeout);
+	}
+	
 }
+/* socket_set_nonblock($socket);
+//stream_set_timeout($socket,3);
+echo "Lire la réponse : \n\n";
+sleep(3);
+while ($out = socket_read($socket, 2048)) {
+    if ($out =='' or $out == False){
+		echo 'out empty\n';
+		break;
+	} 
+	echo $out;
+	flush();
+	sleep(3);
+} */
 
 echo "Fermeture du socket...";
 socket_close($socket);
