@@ -12,8 +12,11 @@ if ($socket === false) {
 
 echo "Essai de connexion à ".$address." sur le port ".$service_port." ...";
 $result = socket_connect($socket, $address, $service_port);
-if ($socket === false) {
+error_log("result = ".$result);
+sleep(10);
+if ($socket === false || $result="" || !$result) {
     echo "socket_connect() a échoué : raison : ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+	$socket = null;
 } else {
 	echo $socket;
     echo "OK".PHP_EOL;
@@ -47,11 +50,11 @@ while ($num_changed_sockets){
 	  }
 	} else if ($num_changed_sockets > 0) {
 	  /* Au moins une des sockets a été modifiée */
-	  error_log("socket has changed = ".$num_changed_sockets.'\n');
+	  error_log("socket has changed = ".$num_changed_sockets.' r w e = ['.count($read).' '.count($write).' '.count($except).']');
 	  for ($i=0 ; $i<count($read) ; $i++){
-		  error_log("i = ".$i);
+		  error_log("i read= ".$i);
 		  $data=socket_read($read[$i],1024);
-		  error_log($data."\n");
+		  error_log("data : " .$data."\n");
 		  echo $data;
 		  flush();
 		  ob_flush();
@@ -68,7 +71,7 @@ while ($num_changed_sockets){
 		  error_log("i except= ".$i);
 		  //$data=socket_read($read[$i],1024);
 		  //error_log($data."\n");
-		  echo $data;
+		  //echo $data;
 		  flush();
 		  ob_flush();
 	  }
