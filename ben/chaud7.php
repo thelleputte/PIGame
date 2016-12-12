@@ -6,6 +6,17 @@ ob_end_flush();
 ob_start();
 $address = "127.0.0.1";
 $service_port = 10000;
+
+function sendMessage($id, $event, $data) {
+    echo "id: $id" . PHP_EOL;
+    echo "event: $event" . PHP_EOL;
+    echo "data: $data" . PHP_EOL;
+    echo PHP_EOL;
+    ob_flush();
+    flush();
+}
+
+
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 if ($socket === false) {
     echo "socket_create() a échoué : raison :  " . socket_strerror(socket_last_error()) . "\n";
@@ -13,15 +24,15 @@ if ($socket === false) {
     echo "OK.\n";
 }
 
-echo "Essai de connexion à ".$address." sur le port ".$service_port." ...";
+echo "Essai de connexion à ".$address." sur le port ".$service_port." ..." .PHP_EOL;
 $result = socket_connect($socket, $address, $service_port);
 error_log("result = ".$result);
 if ($socket === false || $result="" || !$result) {
     echo "socket_connect() a échoué : raison : ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
 	$socket = null;
 } else {
-	echo $socket;
-    echo "OK".PHP_EOL;
+	echo $socket . " ";
+    echo "OK.".PHP_EOL;
 }
 
 $in = "HEAD / HTTP/1.0\r\n\r\n";
@@ -39,7 +50,8 @@ $write  = null;//array($socket);
 $except = array($socket);
 //socket_set_nonblock($socket);
 //while (True){	
-	$num_changed_sockets = socket_select($read, $write, $except, 5);
+$num_changed_sockets = socket_select($read, $write, $except, 5);
+echo "Number of changed sockets: " . $num_change_sockets . PHP_EOL;
 while ($num_changed_sockets){
 	$timeout = 5;
 	if ($num_changed_sockets === false) {

@@ -1,0 +1,27 @@
+/dts-v1/;
+/plugin/;
+
+// http://raspberrypi.stackexchange.com/questions/43825/how-do-i-make-a-device-tree-overlay-for-just-a-single-gpio
+/ {
+    compatible = "brcm,bcm2708";
+
+    fragment@0 {
+        //target = <&i2s>;
+		target-path = "/soc/gpio";
+        __overlay__ {
+			press_buttons: press_buttons {
+                brcm,pins = <14 18 23 25 12 16>;
+                brcm,function = <0>;
+                brcm,pull = <2>;
+				brcm,interrupts = <2 14>, <2 18>, <2 23>, <2 25>, <2 12>, <2 16>; //put pins as high to low edge triggered
+            };
+			light_buttons: light_buttons {
+                brcm,pins = <04 17 22 09 11 06>;
+                brcm,function = <1>;
+                brcm,pull = <2>;
+				brcm,interrupts = <8 14>, <8 18>, <8 23>, <8 25>, <8 12>, <8 16>; //put pins as active low
+            };
+			//add pin config for green and red buttons...
+        };
+    };
+};

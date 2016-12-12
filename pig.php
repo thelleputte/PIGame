@@ -13,10 +13,10 @@ $answer = "";
 $player = "";
 
 // fclose(STDIN);
-fclose(STDOUT);
+// fclose(STDOUT);
 // fclose(STDERR);
 // $STDIN = fopen('/dev/null', 'r');
-$STDOUT = fopen('pig.log', 'wb');
+// $STDOUT = fopen('pig.log', 'wb');
 // $STDERR = fopen('pig.err', 'wb');
 
 
@@ -35,13 +35,25 @@ function sendMessage($id, $event, $data) {
 }
 
 function getQuestionJson() {
+    error_log("check 1");
     $string = file_get_contents("pig.json");
-$json_a = json_decode($string, true);
-echo "". print_r($json_a, true);
-echo $json_a['id'];
-echo $json_a['question'];
-echo $json_a['answer'];
-return array($json_a['id'],$json_a['question'],$json_a['answer']);
+    error_log("check 2");
+    $json_a = json_decode($string, true);
+    error_log("check 3");
+    echo "". print_r($json_a, true);
+    error_log("check 4");
+    error_log ("". print_r($json_a, true));
+    echo $json_a['id'];
+    error_log("check 5");
+    error_log ($json_a['id']);
+    echo $json_a['question'];
+    error_log("check 6");
+    error_log ($json_a['question']);
+    echo $json_a['answer'];
+    error_log("check 7");
+    error_log ($json_a['answer']);
+    return array($json_a['id'],$json_a['question'],$json_a['answer']);
+    error_log("check 8");
 }
 
 function getQuestion() {
