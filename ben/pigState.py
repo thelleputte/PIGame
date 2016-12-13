@@ -6,6 +6,48 @@ class PigState():
 		self.game = game
 		self.name = "generic"
 
+	# define GPIO configuration functions
+	def set_gpio_direction(self, gpio, state):
+		retVal = open(gpio + "/direction", 'w')
+		retVal.write(state)
+		retVal.close()
+
+	def set_gpio_trigger(self, gpio, edge):
+		retVal = open(gpio + "/edge", 'w')
+		retVal.write(edge)
+		retVal.close
+
+	def set_gpio_active_low(self, gpio, string_flag):
+		retVal = open(gpio + "/active_low", 'w')
+		retVal.write(string_flag)
+		retVal.close()
+
+	def set_gpio_value(self, gpio, value):
+		retVal = open(gpio + "/value", 'w')
+		retVal.write(str(value))
+		retVal.close()
+
+	def get_gpio_value(self, gpio, value):
+		retVal = open(gpio + "/value", 'r')
+		result = retVal.read()
+		retVal.close()
+		return result
+
+	def player_button_configure_gpio(self, gpio):
+		self.set_gpio_direction(gpio, "in")
+		self.set_gpio_active_low(gpio,"1")#if pulled up an active low comportment is more logic : button pressed = 1
+		self.set_gpio_trigger(gpio,"rising")# rising as the active_low state is true
+
+	def player_light_configure_gpio(self, gpio):
+		self.set_gpio_direction(gpio, "out")
+		self.set_gpio_active_low(gpio,"0") # 1 on the base of the NPN will allo current in Collector causing light on
+		self.set_gpio_value(gpio, 0)  # rising as the active_low state is true
+
+	def ack_button_configure_gpio(self, gpio):
+		self.set_gpio_direction(gpio, "in")
+		self.set_gpio_active_low(gpio,"1") #if pulled up an active low comportment is more logic : button pressed = 1
+		self.set_gpio_trigger(gpio,"both")
+
 	def __str__(self):
 		return self.name
 	
@@ -28,7 +70,7 @@ class WaitForAnswerState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "wait_for_answer"
-	
+
 	def init_input_gpios(self):
 		BASEDIR = '/sys/class/gpio/'
 		gpios= dict()
@@ -42,6 +84,7 @@ class WaitForAnswerState(PigState):
 				retVal.write(str(p.gpio[0]))
 				gpios[p.id]["button"]=(BASEDIR+'gpio'+str(p.gpio[0]))
 				retVal.close()
+				self.player_button_configure_gpio(gpios[p.id]["button"])
 				
 			if os.path.isdir(BASEDIR+'gpio'+str(p.gpio[1])):
 				print("gpio{} exists".format(p.gpio[1]))
@@ -51,6 +94,7 @@ class WaitForAnswerState(PigState):
 				retVal.write(str(p.gpio[1]))
 				gpios[p.id]["light"]=(BASEDIR+'gpio'+str(p.gpio[1]))
 				retVal.close()
+				self.player_light_configure_gpio(gpios[p.id]["light"])
 		#all gpios should be available (device tree should have configured these correctly)
 		return gpios
 	
