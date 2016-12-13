@@ -57,7 +57,9 @@ class InitState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "init"
+		#configure pull-ups for player buttons
 		call(["pull_config/pull_config", "0x02", "0x02855000", "0"])
+		#do the same for lights and ack_b uttons
 		#blablabla configure players enzo voort
 		
 	def handle_state(self):
