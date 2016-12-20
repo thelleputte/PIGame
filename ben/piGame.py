@@ -4,14 +4,18 @@ class PiGame():
 	def __init__(self):
 		self._nb_players = 6
 		self.players = list();#to be updated
+		self.fastest_player = None
 		
 		self.init_state = InitState(self)
-		self.wait_for_answer_state =WaitForAnswerState(self)
-		self.handle_answer_state =HandleAnswerState(self)
+		self.wait_for_answer_state = WaitForAnswerState(self)
+		self.handle_answer_state = HandleAnswerState(self)
+		self.wait_for_answer_ack_state = WaitForAnswerAckState(self)
 		self.state = self.init_state
+		
 
 	def answer_from(self, player):
 		print("player {pl} was the fastest".format(pl=player.name))
+		self.fastest_player = player
 	
 	def set_state(self, state):
 		self.state = state
@@ -40,7 +44,7 @@ if __name__ == '__main__':
 	the_game.nb_players = 1
 	p1 = Player(0, name="ben")
 	the_game.add_player(p1)
-	for i in range(2):
+	for i in range(12):
 		the_game.state.handle_state();
 		print(the_game)
  
