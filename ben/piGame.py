@@ -8,8 +8,8 @@ class PiGame():
 		self.init_state = InitState(self)
 		self.wait_for_answer_state =WaitForAnswerState(self)
 		self.handle_answer_state =HandleAnswerState(self)
-		
 		self.state = self.init_state
+
 	def answer_from(self, player):
 		print("player {pl} was the fastest".format(pl=player.name))
 	

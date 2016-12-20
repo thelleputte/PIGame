@@ -58,13 +58,34 @@ class InitState(PigState):
 		PigState.__init__(self, game)
 		self.name = "init"
 		#configure pull-ups for player buttons
-		call(["pull_config/pull_config", "0x02", "0x02855000", "0"])
-		#do the same for lights and ack_b uttons
+		#call(["pull_config/pull_config", "0x02", "0x02855000", "0"])
+		#configure no-pull for lights
+		#call(["pull_config/pull_config", "0x00", "0x00420A50", "0"])
+		#do the same for ack_b uttons
+		self.game.ack_buttons = self.configure_ack_buttons()
 		#blablabla configure players enzo voort
 		
 	def handle_state(self):
 		self.game.set_state(self.game.wait_for_answer_state)
-		
+
+	def configure_ack_buttons(self, io_numbers=[2, 3]):
+		BASEDIR = '/sys/class/gpio/'
+		io={"ack_button":{"io_nb":io_numbers[0]},"nack_button":{"io_nb":io_numbers[1]}}
+		for i in io :
+			if os.path.isdir(BASEDIR + 'gpio' + str(io[i]["io_nb"])):
+				print("gpio{} exists".format(io[i]["io_nb"]))
+				io[i]["path"] = (BASEDIR + 'gpio' + str(io[i]["io_nb"]))
+			else:
+				retVal = open(BASEDIR + 'export', 'w')
+				retVal.write(str(io[i]["io_nb"]))
+				io[i]["path"] = (BASEDIR + 'gpio' + str(io[i]["io_nb"]))
+				retVal.close()
+			#ios are exported now they have to be configured
+			self.set_gpio_active_low(io[i]["path"],"1")
+			self.set_gpio_direction(io[i]["path"],"in")
+			self.set_gpio_trigger(io[i]["path"],"both")
+		return io
+
 class AskQuestionState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
@@ -114,15 +135,16 @@ class WaitForAnswerState(PigState):
 		for fileno, event in events:
 			player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
 			#player = self.game.players(gpios["buttons"].index(button))
-			self.game.answer_from(player)
+			self.game.answer_from(player[0])
+			print("debug pigState line : {}, fastest player = {}".format(139, player))
 		for p in self.game.players:
 			epoll.unregister(gpios[p.id]["fd"])
 			gpios[p.id]["fd"].close()
 		epoll.close()
 		
 		#now that the player is known, we need to light his button
-		light = open(gpios[player.id]["light"]+"/value",'w')
-		light.write(1)
+		light = open(str(gpios[player[0].id]["light"])+"/value",'w')
+		light.write("1")
 		light.close()
 		self.game.set_state(self.game.handle_answer_state)
 
@@ -131,10 +153,18 @@ class HandleAnswerState(PigState):
 		PigState.__init__(self, game)
 		self.name = "handle_answer"
 
+
 class WaitForAnswerAckState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "wait_for_answer_ack"
+		self.ack_buttons = self.game.ack_buttons
+
+	def wait_ack(self):
+		fd = list()
+		for i in self.ack_buttons:
+			fd.append(open(self.ack_buttons[i]["path"]+"/value",'r'))
+		#to be continued
 
 class AnswerAckState(PigState):
 	def __init__(self, game):
