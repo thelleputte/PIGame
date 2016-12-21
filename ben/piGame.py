@@ -14,7 +14,10 @@ class PiGame():
 		
 
 	def answer_from(self, player):
-		print("player {pl} was the fastest".format(pl=player.name))
+		try:
+			print("player {pl} was the fastest".format(pl=player.name))
+		except AttributeError:
+			print("no name to display, no player got the right answer")
 		self.fastest_player = player
 	
 	def set_state(self, state):

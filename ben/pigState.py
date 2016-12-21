@@ -39,7 +39,8 @@ class PigState():
 	def player_button_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "in")
 		self.set_gpio_active_low(gpio,"1")#if pulled up an active low comportment is more logic : button pressed = 1
-		self.set_gpio_trigger(gpio,"rising")# rising as the active_low state is true
+		#self.set_gpio_trigger(gpio,"rising")# rising as the active_low state is true
+		self.set_gpio_trigger(gpio, "falling")  # it seems to be electrical valued not logical value (active_low insensitive)
 
 	def player_light_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "out")
@@ -162,11 +163,11 @@ class HandleAnswerState(PigState):
 
 
 class WaitForAnswerAckState(PigState):
-	next_question_timeout = 2
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "wait_for_answer_ack"
 		self.ack_buttons = self.game.ack_buttons
+		self.next_question_timeout = 2
 
 	def wait_ack(self):
 		fd = list()
@@ -180,13 +181,14 @@ class WaitForAnswerAckState(PigState):
 		events = epoll.poll(-1)
 		for fileno, event in events:
 			pressed_button.append(fileno)
-			first_press = time.time()
-			fileno.read()
+			#first_press = time.time()
+			for f in [x for x in fd if x[0].fileno() == fileno] :
+				f[0].read()
 		#keep only the pressed button in epoll list
 		rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
 		for f in rem:
 			epoll.unregister(f[0].fileno())
-		events = epoll.poll(next_question_timeout)
+		events = epoll.poll(self.next_question_timeout)
 		epoll.close()
 		if len(events)<1:
 			#the button has been pressed for more than next_qestion_timeout
@@ -194,20 +196,22 @@ class WaitForAnswerAckState(PigState):
 			return_value = None #as there is no winner for this question
 		else :
 			for fileno, event in events:
-				ack= [a[1] for a in fd if fd[0] == fileno]
-				if ack == "ack_button":
+				ack= [a[1] for a in fd if a[0].fileno() == fileno]
+				print(ack[0])
+				if ack[0] == "ack_button":
 					return_value = True
-				elif ack == "nack_button":
+				elif ack[0] == "nack_button":
 					return_value = False
 				else:
 					return_value = None #demons
-		for f in fd[0]:
-			f.close()
+		for f in fd:
+			#print(f[0])
+			f[0].close()
 		return return_value
 		
 	def handle_state(self):
 		val = self.wait_ack()
-		f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio),'w')
+		f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio[1]),'w')
 		f.write("0")
 		if val is True :
 			print("good answer")
@@ -216,13 +220,13 @@ class WaitForAnswerAckState(PigState):
 			#reset the fastest player
 			self.game.answer_from(None) 
 			#go to next state
-			self.game.set_state(self.game.wait_for_answer)
+			self.game.set_state(self.game.wait_for_answer_state)
 		elif val is False:
 			print("bad answer")
 			#bad answer, go to wait for answer
 			self.game.answer_from(None) 
 			#go to next state
-			self.game.set_state(self.game.wait_for_answer)
+			self.game.set_state(self.game.wait_for_answer_state)
 			#demons should remove the fastest player from player list for next wait for answer
 		else: #should be None => next question
 			print("next question please")
@@ -230,7 +234,7 @@ class WaitForAnswerAckState(PigState):
 			self.game.answer_from(None)
 			#demons : we should reset the list of player as we go to next question
 			#go to next state
-			self.game.set_state(self.game.wait_for_answer)
+			self.game.set_state(self.game.wait_for_answer_state)
 
 class AnswerAckState(PigState):
 	def __init__(self, game):
