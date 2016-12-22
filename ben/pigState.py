@@ -210,7 +210,7 @@ class WaitForAnswerAckState(PigState):
 		for fileno, event in events:
 			pressed_button.append(fileno)
 			#first_press = time.perf_counter()
-			print("first press = {}".format(str(first_press)))
+			#print("first press = {}".format(str(first_press)))
 			for f in [x for x in fd if x[0].fileno() == fileno] :
 				f[0].read()
 				f[0].seek(0,0)
