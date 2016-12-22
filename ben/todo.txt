@@ -1,12 +1,12 @@
 ###			. add pins 20 and 26 to the dts for automatic configuration and remove the pull_config call.
-. compile new dts and reboot. use 
-	sudo dtc -@ -I dts -O dtb -o /boot/overlays/dts_test.dtbo /var/www/html/pig/PIGame/pull_config/dts_test.dts
-. check /boot/config.txt for typo in dtbo filename.
-. change the default python version used
-	sudo ln -s  /usr/bin/python3.4 /usr/bin/python
-. remove the long press code from wait for ack or try to get it working perfectly 
-  perhaps by closing the epoll to flush th event list.
-  the idea is to press on red/green button while waiting for answer if you want to skip the question
+###			. compile new dts and reboot. use 
+###				sudo dtc -@ -I dts -O dtb -o /boot/overlays/dts_test.dtbo /PIGame/pull_config/dts_test.dts
+###			. check /boot/config.txt for typo in dtbo filename.
+###			. change the default python version used
+###				sudo ln -s  /usr/bin/python3.4 /usr/bin/python
+###			. remove the long press code from wait for ack or try to get it working perfectly 
+###			  perhaps by closing the epoll to flush th event list.
+###			  the idea is to press on red/green button while waiting for answer if you want to skip the question
 . put 3k resistor from one unsed GPIO to one player input button and also one from another GPIO to ack /or nack button
   the light GPIOs may be used as they are already output configured.  Pay attention that are "0V" at boot which
   corresponds to button pressed. Don't use GPIO4 as it is the light gpio for player id 0 which is used in piGame _main_ function
