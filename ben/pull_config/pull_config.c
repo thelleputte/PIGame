@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/mman.h>
 
+//#define BCM2708_PERI_BASE		  0x3F000000
 #define BCM2708_PERI_BASE        0x20000000
 #define BLOCK_SIZE (4*1024)
  
@@ -60,6 +61,7 @@ void setup_io_pull(uint32_t pull_cfg, uint32_t gpios, unsigned char bank){
 	volatile uint32_t *gppudClk;
 	if (!bank){
 		//we manage bank 0 for gpios 0 to 31
+		fprintf(stdout, "bank0 at line %d\n",__LINE__);
 		gppudClk = (uint32_t*) (gpio_map+0x98);	
 	}
 	else{
@@ -76,7 +78,7 @@ void main(int argc, char **argv){
 	if (argc != 4){
 		fprintf(stdout, 	"usage : pull_config pull_cfg GPIOS bank\n" 
 							"pull_config: 0: none 1: down 2:up\n"
-							"GPIOS: but the desired bits to one and convert in hex\n"
+							"GPIOS: put the desired bits to one and convert in hex\n"
 							"bank: use 0 for gpios 0 to 31, use 1 for gpios 32  to 53\n");
 	}
 	else {
@@ -84,8 +86,11 @@ void main(int argc, char **argv){
 		unsigned char bank;
 		
 		pull = strtoul(argv[1],NULL,0);
+		fprintf(stdout, "pull = %d\n",pull);
 		gpios = strtoul(argv[2],NULL,0);
-		bank = (unsigned char) strtoul(argv[2],NULL,0);
+		fprintf(stdout, "gpios = %d\n",gpios);
+		bank = (unsigned char) strtoul(argv[3],NULL,0);
+		fprintf(stdout, "bank = %d\n",bank);
 		setup_io_pull(pull, gpios, bank);
 	}
 }

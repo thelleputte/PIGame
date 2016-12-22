@@ -66,11 +66,11 @@ class InitState(PigState):
 		#do the same for ack_b uttons
 		self.game.ack_buttons = self.configure_ack_buttons()
 		#blablabla configure players enzo voort
-		
+		call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 	def handle_state(self):
 		self.game.set_state(self.game.wait_for_answer_state)
 
-	def configure_ack_buttons(self, io_numbers=[2, 3]):
+	def configure_ack_buttons(self, io_numbers=[20, 26]):
 		BASEDIR = '/sys/class/gpio/'
 		io={"ack_button":{"io_nb":io_numbers[0]},"nack_button":{"io_nb":io_numbers[1]}}
 		for i in io :
@@ -134,6 +134,7 @@ class WaitForAnswerState(PigState):
 			gpios[p.id]["fd"]=(open(gpios[p.id]["button"] + "/value", 'r'))
 			epoll.register(gpios[p.id]["fd"].fileno(), select.EPOLLPRI) #demons
 			gpios[p.id]["fd"].read()
+			#gpios[p.id]["fd"].seek(0,0)
 		events = epoll.poll(-1)
 		for fileno, event in events:
 			player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
@@ -181,14 +182,23 @@ class WaitForAnswerAckState(PigState):
 		events = epoll.poll(-1)
 		for fileno, event in events:
 			pressed_button.append(fileno)
-			#first_press = time.time()
+			first_press = time.perf_counter()
+			print("first press = {}".format(str(first_press)))
 			for f in [x for x in fd if x[0].fileno() == fileno] :
 				f[0].read()
+				f[0].seek(0,0)
+				active_file = f[0]
+				
 		#keep only the pressed button in epoll list
 		rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
 		for f in rem:
 			epoll.unregister(f[0].fileno())
+		time.sleep(0.1)#debouncing
+		active_file.seek(0,0)
+		active_file.read()#have to read after registering/unregistering
 		events = epoll.poll(self.next_question_timeout)
+		second_press = time.perf_counter()-first_press
+		print("second press = {}".format(str(second_press)))
 		epoll.close()
 		if len(events)<1:
 			#the button has been pressed for more than next_qestion_timeout
@@ -214,9 +224,10 @@ class WaitForAnswerAckState(PigState):
 		f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio[1]),'w')
 		f.write("0")
 		if val is True :
-			print("good answer")
+			print("good answer, give the point ")
 			#give the point
-			self.game.fastest_player.score +=1
+			print("thz score before = {}".format(self.game.fastest_player.score))
+			self.game.fastest_player.score+=1
 			#reset the fastest player
 			self.game.answer_from(None) 
 			#go to next state

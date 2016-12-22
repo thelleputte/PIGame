@@ -12,6 +12,7 @@ class Player():
 	@property
 	def name(self) :
 		return self._name
+	
 	@name.setter
 	def name(self, name) :
 		self._name = name
@@ -23,8 +24,10 @@ class Player():
 	@property
 	def score(self) :
 		return self._score
+	
 	@score.setter
 	def score(self, score) :
+		print("the score {}".format(score))
 		self._score = score
 	
 	def __str__(self):
