@@ -19,9 +19,9 @@
       target = <&gpio>;
       __overlay__ {
          push_buttons: push_buttons {
-            brcm,pins = 	<14 18 23 25 8  12 4 17 22 9 11 6>;
-            brcm,function = <0  0  0  0  0  0  1 1  1  1 1  1>; /* in then out*/
-            brcm,pull = 	<2  2  2  2  2  2  0 0  0  0 0  0>; /*  pull up on inputs no pull on out*/
+            brcm,pins = 	<14 18 23 25 8  12 4 17 22 9 11 6 20 26>;
+            brcm,function = <0  0  0  0  0  0  1 1  1  1 1  1  0  0>; /* in then out for players and then ack nack*/
+            brcm,pull = 	<2  2  2  2  2  2  0 0  0  0 0  0  2  2>; /*  pull up on inputs no pull on out*/
          };
       };
    };

@@ -1,9 +1,21 @@
-. add pins 20 and 26 to the dts for automatic configuration and remove the pull_config call.
+###			. add pins 20 and 26 to the dts for automatic configuration and remove the pull_config call.
+. compile new dts and reboot. use 
+	sudo dtc -@ -I dts -O dtb -o /boot/overlays/dts_test.dtbo /var/www/html/pig/PIGame/pull_config/dts_test.dts
+. check /boot/config.txt for typo in dtbo filename.
 . change the default python version used
+	sudo ln -s  /usr/bin/python3.4 /usr/bin/python
 . remove the long press code from wait for ack or try to get it working perfectly 
   perhaps by closing the epoll to flush th event list.
   the idea is to press on red/green button while waiting for answer if you want to skip the question
-
+. put 3k resistor from one unsed GPIO to one player input button and also one from another GPIO to ack /or nack button
+  the light GPIOs may be used as they are already output configured.  Pay attention that are "0V" at boot which
+  corresponds to button pressed. Don't use GPIO4 as it is the light gpio for player id 0 which is used in piGame _main_ function
+###			. make a bash script that configure GPIOs for game simulation on the pi2 (use pull_config recompiled for RPI2) 
+			s the dts-tree may be incompatible for rpi2. set  simulation pins to 1
+. use #IF_DEF in pull_config to select raspi version and related offset and compile for RPI2
+###			. make a button_press.sh script to let nikos simulate a player action
+###			. do the same for ack and nack
+ 
 manage the communication channel for UI update
 manage the socket interruption buttons ack nack skip 
 
