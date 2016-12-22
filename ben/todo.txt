@@ -1,0 +1,13 @@
+. add pins 20 and 26 to the dts for automatic configuration and remove the pull_config call.
+. change the default python version used
+. remove the long press code from wait for ack or try to get it working perfectly 
+  perhaps by closing the epoll to flush th event list.
+  the idea is to press on red/green button while waiting for answer if you want to skip the question
+
+manage the communication channel for UI update
+manage the socket interruption buttons ack nack skip 
+
+add ons
+1. manage the question list using a set of id's ? do not try to make a set and then pop, it will be too deterministic
+2. exclude players that already replied to a question (eventually make their button blinking ? (here you can use a set)
+3. 
