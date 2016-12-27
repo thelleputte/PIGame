@@ -3,55 +3,58 @@ import os.path
 import select
 import time
 from subprocess import call
+import json
 
 class PigState():
 	def __init__(self, game):
 		self.game = game
 		self.name = "generic"
-
+	def handle_state(self):
+		self.game.send_message(self.game.registred_interfaces,json.dumps(self.game.status_message).encode('utf-8'))
+		
 	# define GPIO configuration functions
 	def set_gpio_direction(self, gpio, state):
 		retVal = open(gpio + "/direction", 'w')
 		retVal.write(state)
 		retVal.close()
-
+	
 	def set_gpio_trigger(self, gpio, edge):
 		retVal = open(gpio + "/edge", 'w')
 		retVal.write(edge)
 		retVal.close
-
+	
 	def set_gpio_active_low(self, gpio, string_flag):
 		retVal = open(gpio + "/active_low", 'w')
 		retVal.write(string_flag)
 		retVal.close()
-
+	
 	def set_gpio_value(self, gpio, value):
 		retVal = open(gpio + "/value", 'w')
 		retVal.write(str(value))
 		retVal.close()
-
+	
 	def get_gpio_value(self, gpio, value):
 		retVal = open(gpio + "/value", 'r')
 		result = retVal.read()
 		retVal.close()
 		return result
-
+	
 	def player_button_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "in")
 		self.set_gpio_active_low(gpio,"1")#if pulled up an active low comportment is more logic : button pressed = 1
 		#self.set_gpio_trigger(gpio,"rising")# rising as the active_low state is true
 		self.set_gpio_trigger(gpio, "falling")  # it seems to be electrical valued not logical value (active_low insensitive)
-
+	
 	def player_light_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "out")
 		self.set_gpio_active_low(gpio,"0") # 1 on the base of the NPN will allo current in Collector causing light on
 		self.set_gpio_value(gpio, 0)  # rising as the active_low state is true
-
+	
 	def ack_button_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "in")
 		self.set_gpio_active_low(gpio,"1") #if pulled up an active low comportment is more logic : button pressed = 1
 		self.set_gpio_trigger(gpio,"both")
-
+	
 	def __str__(self):
 		return self.name
 
@@ -60,6 +63,7 @@ class InterfaceInitState(PigState):
 		self.game = game
 		self.name = "Interface_init"
 	def handle_state(self):
+		super(InterfaceInitState, self).handle_state()
 		self.game.set_state(self.game.init_state)
 		self.game.set_communicatio_socket()
 
@@ -75,12 +79,14 @@ class InitState(PigState):
 		#do the same for ack_b uttons
 		self.game.ack_buttons = self.configure_ack_buttons()
 		#blablabla configure players enzo voort
+		call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 		
 	def handle_state(self):
+		super(InitState, self).handle_state()
 		self.game.communication_socket.start()
 		self.game.set_state(self.game.wait_for_answer_state)
-
-	def configure_ack_buttons(self, io_numbers=[2, 3]):
+	
+	def configure_ack_buttons(self, io_numbers=[20, 26]):
 		BASEDIR = '/sys/class/gpio/'
 		io={"ack_button":{"io_nb":io_numbers[0]},"nack_button":{"io_nb":io_numbers[1]}}
 		for i in io :
@@ -104,12 +110,11 @@ class AskQuestionState(PigState):
 		PigState.__init__(self, game)
 		self.name = "ask_question"
 
-class WaitForAnswerState(PigState):
-	
+class WaitForAnswerState(PigState):	
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "wait_for_answer"
-
+	
 	def init_input_gpios(self):
 		BASEDIR = '/sys/class/gpio/'
 		gpios= dict()
@@ -138,34 +143,59 @@ class WaitForAnswerState(PigState):
 		return gpios
 	
 	def handle_state(self):
+		super(WaitForAnswerState, self).handle_state()
 		gpios = self.init_input_gpios()
 		epoll = select.epoll()
 		for p in self.game.players:
 			gpios[p.id]["fd"]=(open(gpios[p.id]["button"] + "/value", 'r'))
 			epoll.register(gpios[p.id]["fd"].fileno(), select.EPOLLPRI) #demons
 			gpios[p.id]["fd"].read()
+		nack = open(self.game.ack_buttons["nack_button"]["path"] +"/value",'r')
+		epoll.register(nack.fileno(), select.EPOLLPRI)
+		nack.read()
+		
 		events = epoll.poll(-1)
 		for fileno, event in events:
+			print("longueur de events = {}".format(len(events)))
+			if fileno == nack.fileno():
+				nack.read()
+				player = None
+				self.game.answer_from(player)
+				print("Next Question Please !!")
+				self.game.set_state(self.game.wait_for_answer_state)
+				#debouncing :
+				debounce_buffer = ['1\n']*5
+				while '1\n' in debounce_buffer:
+					nack.seek(0,0)
+					debounce_buffer.append(nack.read())
+					debounce_buffer.pop(0)
+					time.sleep(0.01)
+				break
 			player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
 			#player = self.game.players(gpios["buttons"].index(button))
 			self.game.answer_from(player[0])
 			#print("debug pigState line : {}, fastest player = {}".format(139, player))
+		
 		for p in self.game.players:
 			epoll.unregister(gpios[p.id]["fd"])
 			gpios[p.id]["fd"].close()
+		epoll.unregister(nack.fileno())
+		nack.close()
 		epoll.close()
 		
-		#now that the player is known, we need to light his button
-		light = open(str(gpios[player[0].id]["light"])+"/value",'w')
-		light.write("1")
-		light.close()
-		self.game.set_state(self.game.handle_answer_state)
+		if player is not None:
+			#now that the player is known, we need to light his button
+			light = open(str(gpios[player[0].id]["light"])+"/value",'w')
+			light.write("1")
+			light.close()
+			self.game.set_state(self.game.handle_answer_state)
 
 class HandleAnswerState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "handle_answer"
 	def handle_state(self):
+		super(HandleAnswerState, self).handle_state()
 		self.game.set_state(self.game.wait_for_answer_ack_state)
 		#faut il un cas handle answer ??? si oui pour y faire quoi ?
 		#éventuellement pour allumer la lampe mais c'est déjà fait dans wait_for_answer
@@ -189,40 +219,59 @@ class WaitForAnswerAckState(PigState):
 		#wait for an action on one of the 2 buttons
 		pressed_button = list()
 		events = epoll.poll(-1)
+		print("length of events in wait_ack {}".format(len(events)))
 		for fileno, event in events:
 			pressed_button.append(fileno)
-			#first_press = time.time()
+			#first_press = time.perf_counter()
+			#print("first press = {}".format(str(first_press)))
 			for f in [x for x in fd if x[0].fileno() == fileno] :
 				f[0].read()
+				f[0].seek(0,0)
+				active_file = f
+				#debouncing :
+				debounce_buffer = ['1\n']*5
+				while '1\n' in debounce_buffer:
+					f[0].seek(0,0)
+					debounce_buffer.append(f[0].read())
+					debounce_buffer.pop(0)
+					#print(debounce_buffer)
+					time.sleep(0.01)
 		#keep only the pressed button in epoll list
 		rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
 		for f in rem:
 			epoll.unregister(f[0].fileno())
-		events = epoll.poll(self.next_question_timeout)
+		epoll.unregister(active_file[0].fileno())
+		#events = epoll.poll(self.next_question_timeout)
 		epoll.close()
-		if len(events)<1:
+		#if len(events)<1:
 			#the button has been pressed for more than next_qestion_timeout
 			#that means next question please
-			return_value = None #as there is no winner for this question
+			#return_value = None #as there is no winner for this question
+		# else :
+			# for fileno, event in events:
+				# ack= [a[1] for a in fd if a[0].fileno() == fileno]
+				# print(ack[0])
+				# if ack[0] == "ack_button":
+					# return_value = True
+				# elif ack[0] == "nack_button":
+					# return_value = False
+				# else:
+					# return_value = None #demons
+		if active_file[1] == "ack_button":
+			return_value = True
 		else :
-			for fileno, event in events:
-				ack= [a[1] for a in fd if a[0].fileno() == fileno]
-				print(ack[0])
-				if ack[0] == "ack_button":
-					return_value = True
-				elif ack[0] == "nack_button":
-					return_value = False
-				else:
-					return_value = None #demons
+			return_value = False
 		for f in fd:
 			#print(f[0])
 			f[0].close()
 		return return_value
 		
 	def handle_state(self):
+		super(WaitForAnswerAckState, self).handle_state()
 		val = self.wait_ack()
-		f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio[1]),'w')
-		f.write("0")
+		if self.game.fastest_player:
+			f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio[1]),'w')
+			f.write("0")
 		if val is True :
 			print("good answer")
 			#give the point

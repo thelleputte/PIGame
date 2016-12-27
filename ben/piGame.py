@@ -2,6 +2,7 @@ from pigState import *
 from player import *
 from socketListener import *
 import select
+import json
 
 class PiGame():
 	def __init__(self):
@@ -26,15 +27,28 @@ class PiGame():
 						"player names": [p.name for p in self.players], "scores": [p.score for p in self.players]}
 
 	def set_communicatio_socket(self):
-		self.communication_socket = SocketListener(ip="0.0.0.0", port=10000, game=self, nb_conn=10) #demons est ce ok de passer self depuis la méthode init ?
-
+		print("set the communication socket")
+		self.communication_socket = SocketListener(ip="0.0.0.0", port=10000, game=self, nb_conn=10) 
+		self.communication_epoll = select.epoll()
+		
 	def register_socket(self, open_socket):
 		self.registred_interfaces.append(open_socket)
-		if open_socket[1][1] == 10000 :
+		print("open socket{}".format(open_socket))
+		print("peername {} sockname {}".format(open_socket[0].getpeername(), open_socket[0].getsockname()))
+		conn, addr = open_socket
+		if conn.getsockname()[1] == 10000 :
 			print("communication socket register")
-			self.communication_epoll.register(open_socket[0].fileno(),select.EPOLLIN)
-
+			# do we have to register to a poll here and pass the desired poll to send or receive message method ?
+			# or doing the register when we need to send or receive a message is ok too ?
+			#self.communication_epoll.register(open_socket[0].fileno(),select.EPOLLIN)
+			
+			#send status on new connection (to all peers ?)
+			self.send_message([open_socket],json.dumps(self.status_message).encode('utf-8'))
+			#the respective decoding syntax is
+			# a=json.loads(byte_message.decode('utf-8')
+			
 	def send_message(self,sockets, message):
+		print("try to send message")
 		epoll = select.epoll()
 		connections={}
 		bytes_written = {}
@@ -43,10 +57,11 @@ class PiGame():
 				epoll.register(c.fileno(),select.EPOLLOUT)
 				connections[c.fileno()] = c
 				bytes_written[c.fileno()] = 0
-
+			#demons there should be a loop here to ensure the full message has been sent
 			events = epoll.poll(1)
 			for fileno, event in events:
 				bytes_written[fileno] = connections[fileno].send(message)
+				print("bytes_written {} for file {}".format(bytes_written[fileno], fileno))
 				if event & select.EPOLLHUP:
 					epoll.unregister(fileno)
 					connections[fileno].close()
