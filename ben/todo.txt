@@ -15,6 +15,7 @@
 . use #IF_DEF in pull_config to select raspi version and related offset and compile for RPI2
 ###			. make a button_press.sh script to let nikos simulate a player action
 ###			. do the same for ack and nack
+. make a state end of the game that reset everything and restart a new game.  Pay attention to thread synchronisation.
  
 manage the communication channel for UI update
 manage the socket interruption buttons ack nack skip 

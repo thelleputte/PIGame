@@ -4,11 +4,19 @@ import select
 import time
 from subprocess import call
 import json
+import socket
+
+def merge_two_dicts(x, y):
+    """Given two dicts, merge them into a new dict as a shallow copy."""
+    z = x.copy()
+    z.update(y)
+    return z
 
 class PigState():
 	def __init__(self, game):
 		self.game = game
 		self.name = "generic"
+		self.generic_http_response = "HTTP/1.1 200 OK\nConnection: Closed\n\n".encode('utf-8')
 	def handle_state(self):
 		self.game.send_message(self.game.registred_interfaces,json.dumps(self.game.status_message).encode('utf-8'))
 		
@@ -78,6 +86,7 @@ class InitState(PigState):
 		#call(["pull_config/pull_config", "0x00", "0x00420A50", "0"])
 		#do the same for ack_b uttons
 		self.game.ack_buttons = self.configure_ack_buttons()
+		self.game.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}
 		#blablabla configure players enzo voort
 		call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 		
@@ -153,6 +162,15 @@ class WaitForAnswerState(PigState):
 		nack = open(self.game.ack_buttons["nack_button"]["path"] +"/value",'r')
 		epoll.register(nack.fileno(), select.EPOLLPRI)
 		nack.read()
+		nack_socket = PigSocket(self.game.socket_ports['nack'])
+		#nack_socket.listen()
+		end_socket = PigSocket(self.game.socket_ports['end'])
+		#end_socket.listen()
+		next_socket = PigSocket(self.game.socket_ports['next'])
+		#next_socket.listen()
+		epoll.register(nack_socket.fileno, select.EPOLLIN)	
+		epoll.register(end_socket.fileno, select.EPOLLIN)
+		epoll.register(next_socket.fileno, select.EPOLLIN)
 		
 		events = epoll.poll(-1)
 		for fileno, event in events:
@@ -171,6 +189,30 @@ class WaitForAnswerState(PigState):
 					debounce_buffer.pop(0)
 					time.sleep(0.01)
 				break
+			if fileno == nack_socket.fileno or fileno == next_socket.fileno:
+				s=nack_socket.accept() if fileno == nack_socket.fileno else next_socket.accept()
+				#I don't mind what is the information as I now it from the used port
+				#works with python to python but not with browser that retry
+				s.send(self.generic_http_response)
+				s.close()
+				player = None
+				self.game.answer_from(player)
+				print("Next Question Please !!")
+				self.game.set_state(self.game.wait_for_answer_state)
+				break
+			if fileno == end_socket.fileno:
+				s=end_socket.accept()
+				#I don't mind what is the information as I now it from the used port
+				#works with python to python but not with browser that retries
+				#so we can reply whith a generic http 200 code
+				s.send(self.generic_http_response)
+				# still buggy with direct browser call due to favicon.ico subrequest.  What about javascript ajax style request ?
+				s.close()
+				player = None
+				self.game.answer_from(player)
+				print("End of the game !!, this state is still not implemented")
+				self.game.set_state(self.game.wait_for_answer_state)#just to avoid to be frozen in "no state" demons !!!
+				break
 			player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
 			#player = self.game.players(gpios["buttons"].index(button))
 			self.game.answer_from(player[0])
@@ -181,6 +223,9 @@ class WaitForAnswerState(PigState):
 			gpios[p.id]["fd"].close()
 		epoll.unregister(nack.fileno())
 		nack.close()
+		nack_socket.close()
+		next_socket.close()
+		end_socket.close()
 		epoll.close()
 		
 		if player is not None:
@@ -212,36 +257,67 @@ class WaitForAnswerAckState(PigState):
 	def wait_ack(self):
 		fd = list()
 		epoll = select.epoll()
+		registered_buttons = dict() 
+		registered_sock = dict()
 		for i in self.ack_buttons:
 			fd.append((open(self.ack_buttons[i]["path"]+"/value",'r'),i))
 			epoll.register(fd[-1][0].fileno(),select.EPOLLPRI)
 			fd[-1][0].read()
-		#wait for an action on one of the 2 buttons
+			registered_buttons[fd[-1][0].fileno()] = {'button':i, 'file_desc' : fd[-1][0]}
+		#create sockets on ack, nack and end 
+		ack_socket = PigSocket(self.game.socket_ports['ack'])
+		nack_socket = PigSocket(self.game.socket_ports['nack'])
+		end_socket = PigSocket(self.game.socket_ports['end'])
+		
+		epoll.register(ack_socket.fileno, select.EPOLLIN)
+		registered_sock[ack_socket.fileno] = {'button' :'ack_socket', 'file_desc':ack_socket}
+		epoll.register(nack_socket.fileno, select.EPOLLIN)	
+		registered_sock[nack_socket.fileno] = {'button' :'nack_socket', 'file_desc':nack_socket}
+		epoll.register(end_socket.fileno, select.EPOLLIN)
+		registered_sock[end_socket.fileno] = {'button' :'end_socket', 'file_desc':end_socket}
+				
+		#wait for an action on one button or socket
 		pressed_button = list()
 		events = epoll.poll(-1)
 		print("length of events in wait_ack {}".format(len(events)))
 		for fileno, event in events:
-			pressed_button.append(fileno)
+			#pressed_button.append(fileno)
 			#first_press = time.perf_counter()
 			#print("first press = {}".format(str(first_press)))
-			for f in [x for x in fd if x[0].fileno() == fileno] :
-				f[0].read()
-				f[0].seek(0,0)
-				active_file = f
+			#for f in [x for x in fd if x[0].fileno() == fileno] :
+			if fileno in registered_buttons:
+				#f[0].read()
+				registered_buttons[fileno]['file_desc'].read()
+				#f[0].seek(0,0)
+				registered_buttons[fileno]['file_desc'].seek(0,0)
+				active_file = registered_buttons[fileno]
 				#debouncing :
 				debounce_buffer = ['1\n']*5
 				while '1\n' in debounce_buffer:
-					f[0].seek(0,0)
-					debounce_buffer.append(f[0].read())
+					#f[0].seek(0,0)
+					registered_buttons[fileno]['file_desc'].seek(0,0)
+					debounce_buffer.append(registered_buttons[fileno]['file_desc'].read())
 					debounce_buffer.pop(0)
 					#print(debounce_buffer)
-					time.sleep(0.01)
+					time.sleep(0.01)	
 		#keep only the pressed button in epoll list
-		rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
-		for f in rem:
-			epoll.unregister(f[0].fileno())
-		epoll.unregister(active_file[0].fileno())
+		#rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
+		#for f in rem:
+		#	epoll.unregister(f[0].fileno())
+		#epoll.unregister(active_file[0].fileno())
 		#events = epoll.poll(self.next_question_timeout)
+			if fileno in registered_sock:
+				active_file = registered_sock[fileno]
+				s= active_file['file_desc'].accept()
+				s.send(self.generic_http_response)
+				s.close()
+							
+		
+		#unregister all
+		# for f in registered_buttons.values():
+			# f[file_desc].close()
+		for f in merge_two_dicts(registered_buttons, registered_sock):		#merge of both dict
+			epoll.unregister(f)
 		epoll.close()
 		#if len(events)<1:
 			#the button has been pressed for more than next_qestion_timeout
@@ -257,13 +333,20 @@ class WaitForAnswerAckState(PigState):
 					# return_value = False
 				# else:
 					# return_value = None #demons
-		if active_file[1] == "ack_button":
+		if active_file['button'] == "ack_button":
 			return_value = True
-		else :
+		elif active_file['button'] == "nack_button":
 			return_value = False
-		for f in fd:
+		elif active_file['button'] == "ack_socket":
+			return_value = True
+		elif active_file['button'] == "nack_socket":
+			return_value = False
+		elif active_file['button'] == "end_socket":
+			return_value = False #demons, we should do something else
+		for f in merge_two_dicts(registered_buttons, registered_sock).values():
 			#print(f[0])
-			f[0].close()
+			#f[0].close()
+			f['file_desc'].close()
 		return return_value
 		
 	def handle_state(self):
@@ -299,4 +382,25 @@ class AnswerAckState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "answer_ack"
+
+class PigSocket():
+	def __init__(self, port, bind_address="0.0.0.0", nb_conn=1):
+		self.serversocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+		self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.serversocket.bind((bind_address, port))
+		self.serversocket.listen(nb_conn)
+		self.serversocket.setblocking(0)
+	
+	def close(self):
+		self.serversocket.close()
+	
+	#def listen(self):
+	#	self.serversocket.listen()
+	@property
+	def fileno(self):
+		return self.serversocket.fileno()
+	def accept(self):
+		s, port=self.serversocket.accept()
+		print("socket {}, port {}".format(s,port))
+		return s
 
