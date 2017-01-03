@@ -1,6 +1,7 @@
 <?php
 	function read_cb($buffer){
 		echo event_buffer_read($buffer, 4096);
+		echo "\n";
 	}
 	function write_cb($buffer){
 		
