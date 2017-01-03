@@ -26,6 +26,12 @@ class PiGame():
 		self.status_message={"type" : "status","state":"", "nb_players": self._nb_players,
 						"player names": [p.name for p in self.players], "scores": [p.score for p in self.players]}
 
+	def update_status_message(self):
+		self.status_message["nb_players"] = self._nb_players
+		self.status_message["player names"] = [p.name for p in self.players]
+		self.status_message["scores"] = [p.score for p in self.players]
+		self.status_message["state"] = self.state.name
+
 	def set_communicatio_socket(self):
 		print("set the communication socket")
 		self.communication_socket = SocketListener(ip="0.0.0.0", port=10000, game=self, nb_conn=10) 
@@ -43,6 +49,7 @@ class PiGame():
 			#self.communication_epoll.register(open_socket[0].fileno(),select.EPOLLIN)
 			
 			#send status on new connection (to all peers ?)
+			self.update_status_message()
 			self.send_message([open_socket],json.dumps(self.status_message).encode('utf-8'))
 			#the respective decoding syntax is
 			# a=json.loads(byte_message.decode('utf-8')
@@ -60,13 +67,18 @@ class PiGame():
 			#demons there should be a loop here to ensure the full message has been sent
 			events = epoll.poll(1)
 			for fileno, event in events:
-				bytes_written[fileno] = connections[fileno].send(message)
-				print("bytes_written {} for file {}".format(bytes_written[fileno], fileno))
 				if event & select.EPOLLHUP:
 					epoll.unregister(fileno)
+					# temp = [s for s in sockets if s[0] == connections[fileno]]
+					# print ("length {}".format(len(temp)))
+					# print(temp)
+					# print(temp[0] in sockets)
+					sockets.remove([s for s in sockets if s[0] == connections[fileno]][0])
 					connections[fileno].close()
-					sockets.remove(s for s in sockets if sockets[0] == connections[fileno])
 					del connections[fileno]
+				else:
+					bytes_written[fileno] = connections[fileno].send(message)
+					print("bytes_written {} for file {}".format(bytes_written[fileno], fileno))
 		finally:
 			epoll.close()
 

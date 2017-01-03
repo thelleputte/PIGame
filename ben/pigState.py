@@ -18,6 +18,7 @@ class PigState():
 		self.name = "generic"
 		self.generic_http_response = "HTTP/1.1 200 OK\nConnection: Closed\n\n".encode('utf-8')
 	def handle_state(self):
+		self.game.update_status_message()
 		self.game.send_message(self.game.registred_interfaces,json.dumps(self.game.status_message).encode('utf-8'))
 		
 	# define GPIO configuration functions
