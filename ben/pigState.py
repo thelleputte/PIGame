@@ -57,7 +57,7 @@ class PigState():
 	def player_light_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "out")
 		self.set_gpio_active_low(gpio,"0") # 1 on the base of the NPN will allo current in Collector causing light on
-		self.set_gpio_value(gpio, 0)  # rising as the active_low state is true
+		self.set_gpio_value(gpio, 0)
 	
 	def ack_button_configure_gpio(self, gpio):
 		self.set_gpio_direction(gpio, "in")
@@ -94,7 +94,8 @@ class InitState(PigState):
 	def handle_state(self):
 		super(InitState, self).handle_state()
 		self.game.communication_socket.start()
-		self.game.set_state(self.game.wait_for_answer_state)
+		#self.game.set_state(self.game.wait_for_answer_state)
+		self.game.set_state(self.game.ask_question_state)
 	
 	def configure_ack_buttons(self, io_numbers=[20, 26]):
 		BASEDIR = '/sys/class/gpio/'
@@ -119,6 +120,12 @@ class AskQuestionState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "ask_question"
+
+	def handle_state(self):
+		super(AskQuestionState, self).handle_state()
+		#question should be updated when an answer is ack or nacked
+		self.game.send_message(self.game.registred_interfaces, json.dumps(self.game.question_message).encode('utf-8'))
+		self.game.set_state(self.game.wait_for_answer_state)
 
 class WaitForAnswerState(PigState):	
 	def __init__(self, game):
@@ -199,7 +206,7 @@ class WaitForAnswerState(PigState):
 				player = None
 				self.game.answer_from(player)
 				print("Next Question Please !!")
-				self.game.set_state(self.game.wait_for_answer_state)
+				self.game.set_state(self.game.ask_question_state)
 				break
 			if fileno == end_socket.fileno:
 				s=end_socket.accept()
@@ -363,12 +370,13 @@ class WaitForAnswerAckState(PigState):
 			#reset the fastest player
 			self.game.answer_from(None) 
 			#go to next state
-			self.game.set_state(self.game.wait_for_answer_state)
+			self.game.set_state(self.game.ask_question_state)
 		elif val is False:
 			print("bad answer")
 			#bad answer, go to wait for answer
 			self.game.answer_from(None) 
 			#go to next state
+			#demons : should check if there are still players to play
 			self.game.set_state(self.game.wait_for_answer_state)
 			#demons should remove the fastest player from player list for next wait for answer
 		else: #should be None => next question

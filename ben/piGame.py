@@ -14,6 +14,7 @@ class PiGame():
 		#states
 		self.interface_init_state = InterfaceInitState(self)
 		self.init_state = InitState(self)
+		self.ask_question_state = AskQuestionState(self)
 		self.wait_for_answer_state = WaitForAnswerState(self)
 		self.handle_answer_state = HandleAnswerState(self)
 		self.wait_for_answer_ack_state = WaitForAnswerAckState(self)
@@ -25,12 +26,19 @@ class PiGame():
 		#status message
 		self.status_message={"type" : "status","state":"", "nb_players": self._nb_players,
 						"player names": [p.name for p in self.players], "scores": [p.score for p in self.players]}
+		#question message
+		self.question_message = {"type" : "question", "question" : "The Question", "answer" : "The Answer"}
 
 	def update_status_message(self):
 		self.status_message["nb_players"] = self._nb_players
 		self.status_message["player names"] = [p.name for p in self.players]
 		self.status_message["scores"] = [p.score for p in self.players]
 		self.status_message["state"] = self.state.name
+
+	def update_question_message(self, question, answer):
+		#demons : how will it be really implemented ?
+		self.question_message["question"] = question
+		self.question_message["answer"] = answer
 
 	def set_communicatio_socket(self):
 		print("set the communication socket")
