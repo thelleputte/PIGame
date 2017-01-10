@@ -55,7 +55,14 @@ class PiGame():
 			# do we have to register to a poll here and pass the desired poll to send or receive message method ?
 			# or doing the register when we need to send or receive a message is ok too ?
 			#self.communication_epoll.register(open_socket[0].fileno(),select.EPOLLIN)
-			
+
+			#sse try
+			self.send_message([open_socket],"HTTP/1.1 200 OK\n"
+											"Content-Type: text/event-stream;charset=UTF-8\n"
+											"Access-Control-Allow-Origin: *\n\n"
+											"id: <any_id>\nevent: question\n"
+											"data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8'))
+
 			#send status on new connection (to all peers ?)
 			self.update_status_message()
 			self.send_message([open_socket],json.dumps(self.status_message).encode('utf-8'))
