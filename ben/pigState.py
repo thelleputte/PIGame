@@ -18,8 +18,9 @@ class PigState():
 		self.name = "generic"
 		self.generic_http_response = "HTTP/1.1 200 OK\nConnection: Closed\n\n".encode('utf-8')
 	def handle_state(self):
-		self.game.update_status_message()
-		self.game.send_message(self.game.registred_interfaces,json.dumps(self.game.status_message).encode('utf-8'))
+		#self.game.update_status_message()
+		self.game.send_message(self.game.registred_interfaces,self.game.update_status_message())
+		#self.game.send_message(self.game.registred_interfaces,json.dumps(self.game.status_message).encode('utf-8'))
 		
 	# define GPIO configuration functions
 	def set_gpio_direction(self, gpio, state):
@@ -124,7 +125,8 @@ class AskQuestionState(PigState):
 	def handle_state(self):
 		super(AskQuestionState, self).handle_state()
 		#question should be updated when an answer is ack or nacked
-		self.game.send_message(self.game.registred_interfaces, json.dumps(self.game.question_message).encode('utf-8'))
+		self.game.send_message(self.game.registred_interfaces, self.game.update_question_message())
+		# self.game.send_message(self.game.registred_interfaces, json.dumps(self.game.question_message).encode('utf-8'))
 		self.game.set_state(self.game.wait_for_answer_state)
 
 class WaitForAnswerState(PigState):	

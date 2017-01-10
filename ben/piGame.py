@@ -34,11 +34,26 @@ class PiGame():
 		self.status_message["player names"] = [p.name for p in self.players]
 		self.status_message["scores"] = [p.score for p in self.players]
 		self.status_message["state"] = self.state.name
+		the_message = "HTTP/1.1 200 OK\n" \
+					  "Content-Type: text/event-stream;charset=UTF-8\n"\
+					  "Access-Control-Allow-Origin: *\n\n"\
+					  "id: <any_id>\n"\
+					  "event: status\n"\
+					  "data: {}\n\n".format(json.dumps(self.status_message)).encode('utf-8')
+		return the_message
 
-	def update_question_message(self, question, answer):
+
+	def update_question_message(self, question="The Question", answer="The Answer"):
 		#demons : how will it be really implemented ?
 		self.question_message["question"] = question
 		self.question_message["answer"] = answer
+		the_message = "HTTP/1.1 200 OK\n" \
+					  "Content-Type: text/event-stream;charset=UTF-8\n" \
+					  "Access-Control-Allow-Origin: *\n\n" \
+					  "id: <any_id>\n" \
+					  "event: question\n" \
+					  "data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8')
+		return the_message
 
 	def set_communicatio_socket(self):
 		print("set the communication socket")
@@ -57,15 +72,16 @@ class PiGame():
 			#self.communication_epoll.register(open_socket[0].fileno(),select.EPOLLIN)
 
 			#sse try
-			self.send_message([open_socket],"HTTP/1.1 200 OK\n"
-											"Content-Type: text/event-stream;charset=UTF-8\n"
-											"Access-Control-Allow-Origin: *\n\n"
-											"id: <any_id>\nevent: question\n"
-											"data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8'))
+			# self.send_message([open_socket],"HTTP/1.1 200 OK\n"
+			# 								"Content-Type: text/event-stream;charset=UTF-8\n"
+			# 								"Access-Control-Allow-Origin: *\n\n"
+			# 								"id: <any_id>\nevent: question\n"
+			# 								"data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8'))
+			self.send_message([open_socket],self.update_status_message())
 
 			#send status on new connection (to all peers ?)
-			self.update_status_message()
-			self.send_message([open_socket],json.dumps(self.status_message).encode('utf-8'))
+			#self.update_status_message()
+			#self.send_message([open_socket],json.dumps(self.status_message).encode('utf-8'))
 			#the respective decoding syntax is
 			# a=json.loads(byte_message.decode('utf-8')
 			
