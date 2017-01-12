@@ -352,6 +352,7 @@
 			//Events listener start
 			switch (mode) {
 				case "all":
+					listenStatus(source); 
 					listenQuestion(source);
 					listenPlayer(source);
 					break;
@@ -362,13 +363,26 @@
 					listenPlayer(source);
 					break;
     			default:
-					listenMessage(source);    			
+					listenStatus(source);    			
 					listenQuestion(source);
 					listenPlayer(source);
 			}			
 
 		}
-
+		
+		function listenStatus(source){
+			// Event listener for general message
+			console.log("Listening for message..");	
+			// in JSON format
+			source.addEventListener("status", function(event) {
+			  console.log("status message to parse: " + event.data);
+			  var data = JSON.parse(event.data);
+			  console.log(data["state"], data["player names"], data["scores"]);
+			  //each message contains the lastEventId property
+			  console.log(event.lastEventId);
+			}, false);
+		}
+		
 		function listenMessage(source){
 			// Event listener for general message
 			console.log("Listening for message..");			

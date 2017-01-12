@@ -29,14 +29,17 @@ class PiGame():
 		#question message
 		self.question_message = {"type" : "question", "question" : "The Question", "answer" : "The Answer"}
 
+		#event header
+		self.event_header = "HTTP/1.1 200 OK\n" \
+					  		"Content-Type: text/event-stream;charset=UTF-8\n"\
+					  		"Access-Control-Allow-Origin: *\n\n" .encode('utf-8')
+
 	def update_status_message(self):
 		self.status_message["nb_players"] = self._nb_players
 		self.status_message["player names"] = [p.name for p in self.players]
 		self.status_message["scores"] = [p.score for p in self.players]
 		self.status_message["state"] = self.state.name
-		the_message = "HTTP/1.1 200 OK\n" \
-					  "Content-Type: text/event-stream;charset=UTF-8\n"\
-					  "Access-Control-Allow-Origin: *\n\n"\
+		the_message = self.event_header +\
 					  "id: <any_id>\n"\
 					  "event: status\n"\
 					  "data: {}\n\n".format(json.dumps(self.status_message)).encode('utf-8')
@@ -47,9 +50,7 @@ class PiGame():
 		#demons : how will it be really implemented ?
 		self.question_message["question"] = question
 		self.question_message["answer"] = answer
-		the_message = "HTTP/1.1 200 OK\n" \
-					  "Content-Type: text/event-stream;charset=UTF-8\n" \
-					  "Access-Control-Allow-Origin: *\n\n" \
+		the_message = self.event_header + \
 					  "id: <any_id>\n" \
 					  "event: question\n" \
 					  "data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8')
