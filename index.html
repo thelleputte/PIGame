@@ -344,7 +344,8 @@
 			if(typeof(EventSource) !== "undefined") {
 				console.log("listening pig.php");
 				//var source = new EventSource("http://192.168.1.50:10000");
-				var source = new EventSource("http://"+document.location.hostname+":10000/");
+				/* this will work on any machine if the game and the webserver are on the same machine which is generally the case */
+				var source = new EventSource("http://"+document.location.hostname+":10000/"); 
 			} else {
 				console.log("Browser does not support Server Sent Events");
 				document.getElementById("result").innerHTML = "Désolé, ce jeu est beaucoup trop trendy. Votre navigateur ne le supporte pas.";

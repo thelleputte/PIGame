@@ -29,6 +29,9 @@ class PiGame():
 		#question message
 		self.question_message = {"type" : "question", "question" : "The Question", "answer" : "The Answer"}
 
+		# fastest player message
+		self.fastest_player_message = {"type": "fastest_player", "player_name": "The Name", "player_id": 0}
+
 		#event header
 		self.event_header = "HTTP/1.1 200 OK\n" \
 					  		"Content-Type: text/event-stream;charset=UTF-8\n"\
@@ -54,6 +57,15 @@ class PiGame():
 					  "id: <any_id>\n" \
 					  "event: question\n" \
 					  "data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8')
+		return the_message
+
+	def update_fastest_player_message(self, player):
+		self.fastest_player_message["player_name"] = player.name
+		self.fastest_player_message["player_id"] = player.id
+		the_message = self.event_header + \
+					  "id: <any_id>\n" \
+					  "event: fastest_player\n" \
+					  "data: {}\n\n".format(json.dumps(self.fastest_player_message)).encode('utf-8')
 		return the_message
 
 	def set_communicatio_socket(self):
