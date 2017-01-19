@@ -382,6 +382,16 @@
 			  console.log(data["state"], data["player names"], data["scores"]);
 			  //each message contains the lastEventId property
 			  console.log(event.lastEventId);
+			  /*
+				@Nikos Most of the interface display logic should be done here depending on the 
+				state received in the status message.
+				The score update should also apply here from the score field of the status message
+			  */
+			  if (data["state"] == "wait_for_answer_ack"){
+				//activate answers buttons
+				$("#correct").prop('disabled', false);
+				$("#incorrect").prop('disabled', false);
+			  }
 			}, false);
 		}
 		
@@ -487,7 +497,7 @@
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
 			$.ajax({url: "http://"+ document.location.hostname +":10003"});
-			startListeners();
+			startListeners();//do we need this ? as they are started from start_game button
 		}		
 
 		//async function correct(){
@@ -500,7 +510,9 @@
 			//console.log('Taking a break...');
 			//await sleep(1000);
 			//console.log('One second later');
-			startListeners();
+			startListeners();//do we need this ? as they are started from start_game button
+			//les messages de fastest player semblent arriver en double.. why ? 
+			//on doit probablement avoir des connexions redondantes.
 		}
 
 		function incorrect(){
@@ -508,9 +520,16 @@
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
 			$.ajax({url: "http://"+ document.location.hostname +":10002"});
-			startListeners("player");
+			startListeners();//do we need this ? as they are started from start_game button
 		}
-
+		
+		/*@Nikos
+		  Pay attention !!!  the interface may have been disconnected or refreshed !
+		  Please use the score information contained in each status message to update scores
+		  Please do it for all players for safety
+		  not sure the display has to be updated if no changes are detected 
+		  (it probably slows down the app and perhaps make some visual artefacts)
+		  */
 		function addPoints(){
 
 			//var curWidth = $("#pb" + currentPlayerID).width();
