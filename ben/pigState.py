@@ -17,7 +17,7 @@ class PigState():
 	def __init__(self, game):
 		self.game = game
 		self.name = "generic"
-		self.generic_http_response = "HTTP/1.1 200 OK\nConnection: Closed\n\n".encode('utf-8')
+		self.generic_http_response = "HTTP/1.1 200 OK\nContent-Length: 0\nAccess-Control-Allow-Origin: *\nConnection: Closed\n\n".encode('utf-8')
 	def handle_state(self):
 		#self.game.update_status_message()
 		self.game.send_message(self.game.registred_interfaces,self.game.update_status_message())
