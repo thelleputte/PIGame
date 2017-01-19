@@ -3,9 +3,13 @@ from player import *
 from socketListener import *
 import select
 import json
+import sys
 
 class PiGame():
 	def __init__(self):
+		#simulation flag
+		self.simu = False
+
 		#players infos
 		self._nb_players = 6
 		self.players = list();#to be updated
@@ -129,6 +133,7 @@ class PiGame():
 	def answer_from(self, player):
 		try:
 			print("player {pl} was the fastest".format(pl=player.name))
+			#there is a player that has pressed on the button
 		except AttributeError:
 			print("no name to display, no player got the right answer")
 		self.fastest_player = player
@@ -158,10 +163,13 @@ class PiGame():
 
 if __name__ == '__main__':
 	the_game = PiGame()
+	if len(sys.argv) > 1:
+		the_game.simu = str(sys.argv[1])
 	the_game.nb_players = 1
 	p1 = Player(0, name="ben")
 	the_game.add_player(p1)
-	for i in range(12):
+	#for i in range(12):
+	while 1:
 		the_game.state.handle_state();
 		print(the_game)
  

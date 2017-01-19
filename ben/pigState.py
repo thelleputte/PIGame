@@ -5,6 +5,7 @@ import time
 from subprocess import call
 import json
 import socket
+import random
 
 def merge_two_dicts(x, y):
     """Given two dicts, merge them into a new dict as a shallow copy."""
@@ -163,86 +164,99 @@ class WaitForAnswerState(PigState):
 	
 	def handle_state(self):
 		super(WaitForAnswerState, self).handle_state()
-		gpios = self.init_input_gpios()
-		epoll = select.epoll()
-		for p in self.game.players:
-			gpios[p.id]["fd"]=(open(gpios[p.id]["button"] + "/value", 'r'))
-			epoll.register(gpios[p.id]["fd"].fileno(), select.EPOLLPRI) #demons
-			gpios[p.id]["fd"].read()
-		nack = open(self.game.ack_buttons["nack_button"]["path"] +"/value",'r')
-		epoll.register(nack.fileno(), select.EPOLLPRI)
-		nack.read()
-		nack_socket = PigSocket(self.game.socket_ports['nack'])
-		#nack_socket.listen()
-		end_socket = PigSocket(self.game.socket_ports['end'])
-		#end_socket.listen()
-		next_socket = PigSocket(self.game.socket_ports['next'])
-		#next_socket.listen()
-		epoll.register(nack_socket.fileno, select.EPOLLIN)	
-		epoll.register(end_socket.fileno, select.EPOLLIN)
-		epoll.register(next_socket.fileno, select.EPOLLIN)
-		
-		events = epoll.poll(-1)
-		for fileno, event in events:
-			print("longueur de events = {}".format(len(events)))
-			if fileno == nack.fileno():
-				nack.read()
-				player = None
-				self.game.answer_from(player)
-				print("Next Question Please !!")
-				self.game.set_state(self.game.wait_for_answer_state)
-				#debouncing :
-				debounce_buffer = ['1\n']*5
-				while '1\n' in debounce_buffer:
-					nack.seek(0,0)
-					debounce_buffer.append(nack.read())
-					debounce_buffer.pop(0)
-					time.sleep(0.01)
-				break
-			if fileno == nack_socket.fileno or fileno == next_socket.fileno:
-				s=nack_socket.accept() if fileno == nack_socket.fileno else next_socket.accept()
-				#I don't mind what is the information as I now it from the used port
-				#works with python to python but not with browser that retry
-				s.send(self.generic_http_response)
-				s.close()
-				player = None
-				self.game.answer_from(player)
-				print("Next Question Please !!")
-				self.game.set_state(self.game.ask_question_state)
-				break
-			if fileno == end_socket.fileno:
-				s=end_socket.accept()
-				#I don't mind what is the information as I now it from the used port
-				#works with python to python but not with browser that retries
-				#so we can reply whith a generic http 200 code
-				s.send(self.generic_http_response)
-				# still buggy with direct browser call due to favicon.ico subrequest.  What about javascript ajax style request ?
-				s.close()
-				player = None
-				self.game.answer_from(player)
-				print("End of the game !!, this state is still not implemented")
-				self.game.set_state(self.game.wait_for_answer_state)#just to avoid to be frozen in "no state" demons !!!
-				break
-			player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
-			#player = self.game.players(gpios["buttons"].index(button))
+		if not self.game.simu:
+			gpios = self.init_input_gpios()
+			epoll = select.epoll()
+			for p in self.game.players:
+				gpios[p.id]["fd"]=(open(gpios[p.id]["button"] + "/value", 'r'))
+				epoll.register(gpios[p.id]["fd"].fileno(), select.EPOLLPRI) #demons
+				gpios[p.id]["fd"].read()
+			nack = open(self.game.ack_buttons["nack_button"]["path"] +"/value",'r')
+			epoll.register(nack.fileno(), select.EPOLLPRI)
+			nack.read()
+			nack_socket = PigSocket(self.game.socket_ports['nack'])
+			#nack_socket.listen()
+			end_socket = PigSocket(self.game.socket_ports['end'])
+			#end_socket.listen()
+			next_socket = PigSocket(self.game.socket_ports['next'])
+			#next_socket.listen()
+			epoll.register(nack_socket.fileno, select.EPOLLIN)
+			epoll.register(end_socket.fileno, select.EPOLLIN)
+			epoll.register(next_socket.fileno, select.EPOLLIN)
+
+			events = epoll.poll(-1)
+			for fileno, event in events:
+				print("longueur de events = {}".format(len(events)))
+				if fileno == nack.fileno():
+					nack.read()
+					player = None
+					self.game.answer_from(player)
+					print("Next Question Please !!")
+					self.game.set_state(self.game.wait_for_answer_state)
+					#debouncing :
+					debounce_buffer = ['1\n']*5
+					while '1\n' in debounce_buffer:
+						nack.seek(0,0)
+						debounce_buffer.append(nack.read())
+						debounce_buffer.pop(0)
+						time.sleep(0.01)
+					break
+				if fileno == nack_socket.fileno or fileno == next_socket.fileno:
+					s=nack_socket.accept() if fileno == nack_socket.fileno else next_socket.accept()
+					#I don't mind what is the information as I now it from the used port
+					#works with python to python but not with browser that retry
+					s.send(self.generic_http_response)
+					s.close()
+					player = None
+					self.game.answer_from(player)
+					print("Next Question Please !!")
+					self.game.set_state(self.game.ask_question_state)
+					break
+				if fileno == end_socket.fileno:
+					s=end_socket.accept()
+					#I don't mind what is the information as I now it from the used port
+					#works with python to python but not with browser that retries
+					#so we can reply whith a generic http 200 code
+					s.send(self.generic_http_response)
+					# still buggy with direct browser call due to favicon.ico subrequest.  What about javascript ajax style request ?
+					s.close()
+					player = None
+					self.game.answer_from(player)
+					print("End of the game !!, this state is still not implemented")
+					self.game.set_state(self.game.wait_for_answer_state)#just to avoid to be frozen in "no state" demons !!!
+					break
+				player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
+				#player = self.game.players(gpios["buttons"].index(button))
+				self.game.answer_from(player[0])
+				#print("debug pigState line : {}, fastest player = {}".format(139, player))
+
+			for p in self.game.players:
+				epoll.unregister(gpios[p.id]["fd"])
+				gpios[p.id]["fd"].close()
+			epoll.unregister(nack.fileno())
+			nack.close()
+			nack_socket.close()
+			next_socket.close()
+			end_socket.close()
+			epoll.close()
+
+			if player is not None:
+				#now that the player is known, we need to light his button
+				light = open(str(gpios[player[0].id]["light"])+"/value",'w')
+				light.write("1")
+				light.close()
+				#now that the HW is OK, we can update the web interface
+				self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player[0]))
+				self.game.set_state(self.game.handle_answer_state)
+		else:
+			#simulation mode
+			print("Simulation Mode")
+			r=random.randrange(len(self.game.players))
+			print("random id choosen : {}".format(r))
+			time.sleep(5)
+			player=[self.game.players[r]]
 			self.game.answer_from(player[0])
-			#print("debug pigState line : {}, fastest player = {}".format(139, player))
-		
-		for p in self.game.players:
-			epoll.unregister(gpios[p.id]["fd"])
-			gpios[p.id]["fd"].close()
-		epoll.unregister(nack.fileno())
-		nack.close()
-		nack_socket.close()
-		next_socket.close()
-		end_socket.close()
-		epoll.close()
-		
-		if player is not None:
-			#now that the player is known, we need to light his button
-			light = open(str(gpios[player[0].id]["light"])+"/value",'w')
-			light.write("1")
-			light.close()
+			self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player[0]))
 			self.game.set_state(self.game.handle_answer_state)
 
 class HandleAnswerState(PigState):

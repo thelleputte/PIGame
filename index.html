@@ -440,18 +440,19 @@
 
 		function listenPlayer(source){
 			// Event listener for faster player
-			console.log("Listening for faster player..");
-			source.addEventListener("player",function(event){
+			console.log("Listening for fastest player..");
+			source.addEventListener("fastest_player",function(event){
 
 				document.getElementById("result").innerHTML = "Last browser Player sync: " + getDate() + "<br>";
 				document.getElementById("result").innerHTML += "Data brute: " + event.data + "<br>";
 
-				currentPlayerID = event.data;
+				console.log("Fastest player: " + event.data);
 				// message in JSON format
-				//var data = JSON.parse(event.data);
-				//currentPlayerID = data.player;
+				var data = JSON.parse(event.data);
+				currentPlayerID = data["player_id"]+1;//+1 to get ids indexed from 1
+				currentPlayerName = data["player_name"];
 				//var currentAnswer = data.answer;
-				console.log("Faster player: " + currentPlayerID);								
+												
 				document.getElementById("answer").innerHTML = "<b>Réponse: </b>" + currentAnswer;
 				document.getElementById("result").innerHTML += "Joueur " + currentPlayerID + " a la main.<br>";
 				document.getElementById("result").innerHTML += "Réponse: " + currentAnswer + "<br>";
@@ -470,7 +471,7 @@
 				    playersEl[i].classList.remove("glow");
 				}
 				//Add glow style to current player
-				var thePlayerEl = document.querySelector("#player" + currentPlayerID);
+				var thePlayerEl = document.querySelector("#player" + currentPlayerID );
 				thePlayerEl.classList.add("glow");
 
 				//Close connection
@@ -485,6 +486,7 @@
 			console.log("Other question");
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
+			$.ajax({url: "http://"+ document.location.hostname +":10003"});
 			startListeners();
 		}		
 
@@ -492,7 +494,8 @@
 		function correct(){
 			console.log("Correct answer");
 			$("#correct").prop('disabled', true);
-			$("#incorrect").prop('disabled', true);		
+			$("#incorrect").prop('disabled', true);	
+			$.ajax({url: "http://"+ document.location.hostname +":10001"});
 			addPoints();
 			//console.log('Taking a break...');
 			//await sleep(1000);
@@ -504,6 +507,7 @@
 			console.log("Incorrect answer, next player");
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
+			$.ajax({url: "http://"+ document.location.hostname +":10002"});
 			startListeners("player");
 		}
 
