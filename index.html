@@ -364,6 +364,9 @@
 			    case "player":
 					listenPlayer(source);
 					break;
+				case "status":
+					listenStatus(source);
+					break;
     			default:
 					listenStatus(source);    			
 					listenQuestion(source);
@@ -448,6 +451,13 @@
 			}, false);			
 		}
 
+		function glowReset(){
+			var playersEl = document.querySelectorAll(".glow");
+			for (var i = 0; i < playersEl.length; i++) {
+				playersEl[i].classList.remove("glow");
+			}
+		}
+		
 		function listenPlayer(source){
 			// Event listener for faster player
 			console.log("Listening for fastest player..");
@@ -476,16 +486,13 @@
 				//$("#player1").text("A toi");
 				//Remove all glow style
 				//Salut Thib, ça roule ? :)
-				var playersEl = document.querySelectorAll(".glow");
-				for (var i = 0; i < playersEl.length; i++) {
-				    playersEl[i].classList.remove("glow");
-				}
+				glowReset();
 				//Add glow style to current player
 				var thePlayerEl = document.querySelector("#player" + currentPlayerID );
 				thePlayerEl.classList.add("glow");
 
 				//Close connection
-				closeConnection(source);
+				//closeConnection(source); 
 
 			}, false);
 		}
@@ -493,16 +500,18 @@
 
 		function nextQ(){
 			//alert ("à implémenter :)");
+			glowReset();
 			console.log("Other question");
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
 			$.ajax({url: "http://"+ document.location.hostname +":10003"});
-			startListeners();//do we need this ? as they are started from start_game button
+			//startListeners();//do we need this ? as they are started from start_game button
 		}		
 
 		//async function correct(){
 		function correct(){
 			console.log("Correct answer");
+			glowReset();
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);	
 			$.ajax({url: "http://"+ document.location.hostname +":10001"});
@@ -510,17 +519,18 @@
 			//console.log('Taking a break...');
 			//await sleep(1000);
 			//console.log('One second later');
-			startListeners();//do we need this ? as they are started from start_game button
+			//startListeners();//do we need this ? as they are started from start_game button
 			//les messages de fastest player semblent arriver en double.. why ? 
 			//on doit probablement avoir des connexions redondantes.
 		}
 
 		function incorrect(){
 			console.log("Incorrect answer, next player");
+			glowReset();
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
 			$.ajax({url: "http://"+ document.location.hostname +":10002"});
-			startListeners();//do we need this ? as they are started from start_game button
+			//startListeners();//do we need this ? as they are started from start_game button
 		}
 		
 		/*@Nikos

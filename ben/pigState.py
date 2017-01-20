@@ -125,6 +125,8 @@ class AskQuestionState(PigState):
 
 	def handle_state(self):
 		super(AskQuestionState, self).handle_state()
+		#reset the valid player list.
+		self.game.valid_players = list(self.game.players) #copy of the player list
 		#question should be updated when an answer is ack or nacked
 		self.game.send_message(self.game.registred_interfaces, self.game.update_question_message())
 		# self.game.send_message(self.game.registred_interfaces, json.dumps(self.game.question_message).encode('utf-8'))
@@ -164,6 +166,8 @@ class WaitForAnswerState(PigState):
 	
 	def handle_state(self):
 		super(WaitForAnswerState, self).handle_state()
+		#debug print
+		print("----- DEBUG Valid Users -----\n {}\n------------------".format([n.name for n in self.game.valid_players]))
 		if not self.game.simu:
 			gpios = self.init_input_gpios()
 			epoll = select.epoll()
@@ -251,10 +255,12 @@ class WaitForAnswerState(PigState):
 		else:
 			#simulation mode
 			print("Simulation Mode")
-			r=random.randrange(len(self.game.players))
-			print("random id choosen : {}".format(r))
+			self.init_input_gpios() #have to be done even if we are in simulation mode
+			r=random.randrange(len(self.game.valid_players))
+			print("random index choosen : {}".format(r))
 			time.sleep(5)
-			player=[self.game.players[r]]
+			player=[self.game.valid_players[r]]
+			print("the choosen player is {}".format(player[0].name))
 			self.game.answer_from(player[0])
 			self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player[0]))
 			self.game.set_state(self.game.handle_answer_state)
@@ -390,10 +396,14 @@ class WaitForAnswerAckState(PigState):
 		elif val is False:
 			print("bad answer")
 			#bad answer, go to wait for answer
-			self.game.answer_from(None) 
+			self.game.valid_players.remove(self.game.fastest_player)
+			self.game.answer_from(None)
 			#go to next state
 			#demons : should check if there are still players to play
-			self.game.set_state(self.game.wait_for_answer_state)
+			if self.game.valid_players :
+				self.game.set_state(self.game.wait_for_answer_state)
+			else: #no more players in the list => next question please
+				self.game.set_state(self.game.ask_question_state)
 			#demons should remove the fastest player from player list for next wait for answer
 		else: #should be None => next question
 			print("next question please")
@@ -401,7 +411,7 @@ class WaitForAnswerAckState(PigState):
 			self.game.answer_from(None)
 			#demons : we should reset the list of player as we go to next question
 			#go to next state
-			self.game.set_state(self.game.wait_for_answer_state)
+			self.game.set_state(self.game.ask_question_state)
 
 class AnswerAckState(PigState):
 	def __init__(self, game):

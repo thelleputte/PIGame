@@ -11,8 +11,9 @@ class PiGame():
 		self.simu = False
 
 		#players infos
-		self._nb_players = 6
+		self._nb_players = 0
 		self.players = list();#to be updated
+		self.valid_players = list();# list of players that may answer
 		self.fastest_player = None
 
 		#states
@@ -152,6 +153,8 @@ class PiGame():
 
 	def add_player(self, player):
 		self.players.append(player)
+		self.valid_players.append(player)
+		self.nb_players +=1
 
 	def __str__(self):
 		#print("we aer here")
@@ -165,9 +168,16 @@ if __name__ == '__main__':
 	the_game = PiGame()
 	if len(sys.argv) > 1:
 		the_game.simu = str(sys.argv[1])
-	the_game.nb_players = 1
-	p1 = Player(0, name="ben")
-	the_game.add_player(p1)
+	#the_game.nb_players = 1
+	pl=list()
+	pl.append(Player(0, name="ben"))
+	pl.append( Player(1,name='Nikos'))
+	pl.append(Player(2,name='Thib'))
+	pl.append( Player(3,name='Ines'))
+	pl.append( Player(4,name='Clara'))
+	#pl.append( Player(5,name='Remi')) #do not use the 6th player with a RPI 1 : GPIO6 writing crashes the system
+	for p in pl:
+		the_game.add_player(p)
 	#for i in range(12):
 	while 1:
 		the_game.state.handle_state();
