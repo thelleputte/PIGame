@@ -170,11 +170,11 @@ if __name__ == '__main__':
 		the_game.simu = str(sys.argv[1])
 	#the_game.nb_players = 1
 	pl=list()
-	pl.append(Player(0, name="ben"))
-	pl.append( Player(1,name='Nikos'))
-	pl.append(Player(2,name='Thib'))
-	pl.append( Player(3,name='Ines'))
-	pl.append( Player(4,name='Clara'))
+	pl.append(Player(0, name="Clara"))
+	pl.append( Player(1,name='Inès'))
+	pl.append(Player(2,name='Dorian'))
+	pl.append( Player(3,name='Coline'))
+	pl.append( Player(4,name='Quentin'))
 	#pl.append( Player(5,name='Remi')) #do not use the 6th player with a RPI 1 : GPIO6 writing crashes the system
 	for p in pl:
 		the_game.add_player(p)
