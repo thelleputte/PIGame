@@ -91,7 +91,7 @@ class InitState(PigState):
 		self.game.ack_buttons = self.configure_ack_buttons()
 		self.game.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}
 		#blablabla configure players enzo voort
-		call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
+		#call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 		
 	def handle_state(self):
 		super(InitState, self).handle_state()
