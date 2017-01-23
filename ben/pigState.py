@@ -76,7 +76,7 @@ class InterfaceInitState(PigState):
 	def handle_state(self):
 		super(InterfaceInitState, self).handle_state()
 		self.game.set_state(self.game.init_state)
-		self.game.set_communicatio_socket()
+		self.game.set_communication_socket()
 
 
 class InitState(PigState):

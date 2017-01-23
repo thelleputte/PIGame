@@ -73,7 +73,7 @@ class PiGame():
 					  "data: {}\n\n".format(json.dumps(self.fastest_player_message)).encode('utf-8')
 		return the_message
 
-	def set_communicatio_socket(self):
+	def set_communication_socket(self):
 		print("set the communication socket")
 		self.communication_socket = SocketListener(ip="0.0.0.0", port=10000, game=self, nb_conn=10) 
 		self.communication_epoll = select.epoll()
