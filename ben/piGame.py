@@ -19,6 +19,7 @@ class PiGame():
 		#states
 		self.interface_init_state = InterfaceInitState(self)
 		self.init_state = InitState(self)
+		self.init_players_state = InitPlayersState(self)
 		self.ask_question_state = AskQuestionState(self)
 		self.wait_for_answer_state = WaitForAnswerState(self)
 		self.handle_answer_state = HandleAnswerState(self)
@@ -161,7 +162,7 @@ class PiGame():
 		output=""
 		for p in self.players :
 			output += str(p) +"\n"
-		output += str(self.state)
+		output += "\033[31;1m"+str(self.state)+"\033[0m"
 		return output
 
 if __name__ == '__main__':

@@ -75,8 +75,8 @@ class InterfaceInitState(PigState):
 		self.name = "Interface_init"
 	def handle_state(self):
 		super(InterfaceInitState, self).handle_state()
-		self.game.set_state(self.game.init_state)
 		self.game.set_communication_socket()
+		self.game.set_state(self.game.init_state)
 
 
 class InitState(PigState):
@@ -90,14 +90,13 @@ class InitState(PigState):
 		#do the same for ack_b uttons
 		self.game.ack_buttons = self.configure_ack_buttons()
 		self.game.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}
-		#blablabla configure players enzo voort
 		#call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 		
 	def handle_state(self):
 		super(InitState, self).handle_state()
 		self.game.communication_socket.start()
 		#self.game.set_state(self.game.wait_for_answer_state)
-		self.game.set_state(self.game.ask_question_state)
+		self.game.set_state(self.game.init_players_state)
 	
 	def configure_ack_buttons(self, io_numbers=[20, 26]):
 		BASEDIR = '/sys/class/gpio/'
@@ -117,6 +116,18 @@ class InitState(PigState):
 			#self.set_gpio_direction(io[i]["path"],"in")
 			#self.set_gpio_trigger(io[i]["path"],"both")
 		return io
+
+class InitPlayersState(PigState):
+	def __init__(self, game):
+		PigState.__init__(self, game)
+		self.name = "init_players"
+	def handle_state(self):
+		super(InitPlayersState, self).handle_state()
+		#here we have to implement the player registration procedure
+
+		#then go to the first question
+		self.game.set_state(self.game.ask_question_state)
+
 
 class AskQuestionState(PigState):
 	def __init__(self, game):
