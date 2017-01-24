@@ -14,6 +14,7 @@ def merge_two_dicts(x, y):
     return z
 
 class PigState():
+	BASEDIR = '/sys/class/gpio/'
 	def __init__(self, game):
 		self.game = game
 		self.name = "generic"
@@ -49,23 +50,44 @@ class PigState():
 		result = retVal.read()
 		retVal.close()
 		return result
-	
+
+	def check_gpio(self, gpio):
+		path = PigState.BASEDIR + 'gpio' + str(gpio)
+		if os.path.isdir(path):
+			print("gpio{} exists".format(gpio))
+		else:
+			retVal = open(PigState.BASEDIR + 'export', 'w')
+			retVal.write(gpio)
+			retVal.close()
+		return path
+
 	def player_button_configure_gpio(self, gpio):
-		self.set_gpio_direction(gpio, "in")
-		self.set_gpio_active_low(gpio,"1")#if pulled up an active low comportment is more logic : button pressed = 1
+		path = self.check_gpio(gpio)
+		self.set_gpio_direction(path, "in")
+		self.set_gpio_active_low(path,"1")#if pulled up an active low comportment is more logic : button pressed = 1
 		#self.set_gpio_trigger(gpio,"rising")# rising as the active_low state is true
-		self.set_gpio_trigger(gpio, "falling")  # it seems to be electrical valued not logical value (active_low insensitive)
+		self.set_gpio_trigger(path, "falling")  # it seems to be electrical valued not logical value (active_low insensitive)
 	
 	def player_light_configure_gpio(self, gpio):
-		self.set_gpio_direction(gpio, "out")
-		self.set_gpio_active_low(gpio,"0") # 1 on the base of the NPN will allo current in Collector causing light on
-		self.set_gpio_value(gpio, 0)
+		path = self.check_gpio(gpio)
+		self.set_gpio_direction(path, "out")
+		self.set_gpio_active_low(path,"0") # 1 on the base of the NPN will allo current in Collector causing light on
+		self.set_gpio_value(path, 0)
 	
 	def ack_button_configure_gpio(self, gpio):
+		#self.check_gpio(gpio)#demons to modify for uniformity
 		self.set_gpio_direction(gpio, "in")
 		self.set_gpio_active_low(gpio,"1") #if pulled up an active low comportment is more logic : button pressed = 1
 		self.set_gpio_trigger(gpio,"both")
-	
+
+	def get_gpio_value_path(self, gpio):
+		return PigState.BASEDIR + 'gpio' + str(gpio) + '/value'
+
+	def set_player_light(self, player, status='1'):
+		fd = open(self.get_gpio_value_path(player.led), 'w')
+		fd.write(status)
+		fd.close()
+
 	def __str__(self):
 		return self.name
 
@@ -91,6 +113,13 @@ class InitState(PigState):
 		self.game.ack_buttons = self.configure_ack_buttons()
 		self.game.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}
 		#call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
+		#configure all possible players GPIO as they have to be active for the registration procedure
+		for b in self.game.GPIO_player_buttons :
+			print("init gpio" + str(b))
+			self.player_button_configure_gpio(b)
+		for l in self.game.GPIO_player_leds:
+			self.player_light_configure_gpio(l)
+			print("init gpio" + str(l))
 		
 	def handle_state(self):
 		super(InitState, self).handle_state()
@@ -128,7 +157,6 @@ class InitPlayersState(PigState):
 		#then go to the first question
 		self.game.set_state(self.game.ask_question_state)
 
-
 class AskQuestionState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
@@ -148,44 +176,48 @@ class WaitForAnswerState(PigState):
 		PigState.__init__(self, game)
 		self.name = "wait_for_answer"
 	
-	def init_input_gpios(self):
-		BASEDIR = '/sys/class/gpio/'
-		gpios= dict()
-		for p in self.game.players:
-			gpios[p.id]={}
-			if os.path.isdir(BASEDIR+'gpio'+str(p.gpio[0])):
-				print("gpio{} exists".format(p.gpio[0]))
-				gpios[p.id]["button"]=(BASEDIR+'gpio'+str(p.gpio[0]))
-			else:
-				retVal = open(BASEDIR+'export','w')
-				retVal.write(str(p.gpio[0]))
-				gpios[p.id]["button"]=(BASEDIR+'gpio'+str(p.gpio[0]))
-				retVal.close()
-				self.player_button_configure_gpio(gpios[p.id]["button"])
-				
-			if os.path.isdir(BASEDIR+'gpio'+str(p.gpio[1])):
-				print("gpio{} exists".format(p.gpio[1]))
-				gpios[p.id]["light"]=(BASEDIR+'gpio'+str(p.gpio[1]))
-			else:
-				retVal = open(BASEDIR+'export','w')
-				retVal.write(str(p.gpio[1]))
-				gpios[p.id]["light"]=(BASEDIR+'gpio'+str(p.gpio[1]))
-				retVal.close()
-				self.player_light_configure_gpio(gpios[p.id]["light"])
-		#all gpios should be available (device tree should have configured these correctly)
-		return gpios
-	
+	# def init_input_gpios(self):
+	# 	BASEDIR = '/sys/class/gpio/'
+	# 	gpios= dict()
+	# 	for p in self.game.players:
+	# 		gpios[p.id]={}
+	# 		if os.path.isdir(BASEDIR+'gpio'+str(p.gpio[0])):
+	# 			print("gpio{} exists".format(p.gpio[0]))
+	# 			gpios[p.id]["button"]=(BASEDIR+'gpio'+str(p.gpio[0]))
+	# 		else:
+	# 			retVal = open(BASEDIR+'export','w')
+	# 			retVal.write(str(p.gpio[0]))
+	# 			gpios[p.id]["button"]=(BASEDIR+'gpio'+str(p.gpio[0]))
+	# 			retVal.close()
+	# 			self.player_button_configure_gpio(gpios[p.id]["button"])
+	#
+	# 		if os.path.isdir(BASEDIR+'gpio'+str(p.gpio[1])):
+	# 			print("gpio{} exists".format(p.gpio[1]))
+	# 			gpios[p.id]["light"]=(BASEDIR+'gpio'+str(p.gpio[1]))
+	# 		else:
+	# 			retVal = open(BASEDIR+'export','w')
+	# 			retVal.write(str(p.gpio[1]))
+	# 			gpios[p.id]["light"]=(BASEDIR+'gpio'+str(p.gpio[1]))
+	# 			retVal.close()
+	# 			self.player_light_configure_gpio(gpios[p.id]["light"])
+	# 	#all gpios should be available (device tree should have configured these correctly)
+	# 	return gpios
+
+
 	def handle_state(self):
 		super(WaitForAnswerState, self).handle_state()
+		input_gpios=dict()
 		#debug print
 		print("----- DEBUG Valid Users -----\n {}\n------------------".format([n.name for n in self.game.valid_players]))
 		if not self.game.simu:
-			gpios = self.init_input_gpios()
+			# gpios = self.init_input_gpios()
 			epoll = select.epoll()
-			for p in self.game.players:
-				gpios[p.id]["fd"]=(open(gpios[p.id]["button"] + "/value", 'r'))
-				epoll.register(gpios[p.id]["fd"].fileno(), select.EPOLLPRI) #demons
-				gpios[p.id]["fd"].read()
+			for p in self.game.valid_players:
+				#gpios[p.id]["fd"]=(open(gpios[p.id]["button"] + "/value", 'r'))
+				fd = open(self.get_gpio_value_path(p.button) , 'r')
+				input_gpios[fd.fileno()]={'fd':fd,'player':p }
+				epoll.register(fd.fileno(), select.EPOLLPRI) #demons
+				fd.read()
 			nack = open(self.game.ack_buttons["nack_button"]["path"] +"/value",'r')
 			epoll.register(nack.fileno(), select.EPOLLPRI)
 			nack.read()
@@ -202,9 +234,9 @@ class WaitForAnswerState(PigState):
 			events = epoll.poll(-1)
 			for fileno, event in events:
 				print("longueur de events = {}".format(len(events)))
+				player = None
 				if fileno == nack.fileno():
 					nack.read()
-					player = None
 					self.game.answer_from(player)
 					print("Next Question Please !!")
 					self.game.set_state(self.game.wait_for_answer_state)
@@ -222,7 +254,6 @@ class WaitForAnswerState(PigState):
 					#works with python to python but not with browser that retry
 					s.send(self.generic_http_response)
 					s.close()
-					player = None
 					self.game.answer_from(player)
 					print("Next Question Please !!")
 					self.game.set_state(self.game.ask_question_state)
@@ -235,19 +266,18 @@ class WaitForAnswerState(PigState):
 					s.send(self.generic_http_response)
 					# still buggy with direct browser call due to favicon.ico subrequest.  What about javascript ajax style request ?
 					s.close()
-					player = None
 					self.game.answer_from(player)
 					print("End of the game !!, this state is still not implemented")
 					self.game.set_state(self.game.wait_for_answer_state)#just to avoid to be frozen in "no state" demons !!!
 					break
-				player = [p for p in self.game.players if gpios[p.id]["fd"].fileno() == fileno]
+				player = input_gpios[fileno]['player']
 				#player = self.game.players(gpios["buttons"].index(button))
-				self.game.answer_from(player[0])
+				self.game.answer_from(player)
 				#print("debug pigState line : {}, fastest player = {}".format(139, player))
 
-			for p in self.game.players:
-				epoll.unregister(gpios[p.id]["fd"])
-				gpios[p.id]["fd"].close()
+			for f in input_gpios:
+				epoll.unregister(input_gpios[f]["fd"])
+				input_gpios[f]["fd"].close()
 			epoll.unregister(nack.fileno())
 			nack.close()
 			nack_socket.close()
@@ -257,23 +287,21 @@ class WaitForAnswerState(PigState):
 
 			if player is not None:
 				#now that the player is known, we need to light his button
-				light = open(str(gpios[player[0].id]["light"])+"/value",'w')
-				light.write("1")
-				light.close()
+				self.set_player_light(player,status='1')
 				#now that the HW is OK, we can update the web interface
-				self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player[0]))
+				self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player))
 				self.game.set_state(self.game.handle_answer_state)
 		else:
 			#simulation mode
 			print("Simulation Mode")
-			self.init_input_gpios() #have to be done even if we are in simulation mode
+			#self.init_input_gpios() #have to be done even if we are in simulation mode
 			r=random.randrange(len(self.game.valid_players))
 			print("random index choosen : {}".format(r))
 			time.sleep(5)
-			player=[self.game.valid_players[r]]
-			print("the choosen player is {}".format(player[0].name))
-			self.game.answer_from(player[0])
-			self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player[0]))
+			player=self.game.valid_players[r]
+			print("the choosen player is {}".format(player.name))
+			self.game.answer_from(player)
+			self.game.send_message(self.game.registred_interfaces, self.game.update_fastest_player_message(player))
 			self.game.set_state(self.game.handle_answer_state)
 
 class HandleAnswerState(PigState):

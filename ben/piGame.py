@@ -6,6 +6,12 @@ import json
 import sys
 
 class PiGame():
+	#static definitions of USED PLAYERS GPIOS
+	# GPIO_player_buttons = 	[14, 18, 23, 25, 12, 16]
+	# GPIO_player_leds = 		[ 4, 17, 22,  9, 11,  6]
+	#these values on a RPI1 please
+	GPIO_player_buttons = 	[14, 18, 23, 25, 12]
+	GPIO_player_leds = 		[ 4, 17, 22,  9, 11]
 	def __init__(self):
 		#simulation flag
 		self.simu = False
@@ -171,11 +177,11 @@ if __name__ == '__main__':
 		the_game.simu = str(sys.argv[1])
 	#the_game.nb_players = 1
 	pl=list()
-	pl.append(Player(0, name="Clara"))
-	pl.append( Player(1,name='Inès'))
-	pl.append(Player(2,name='Dorian'))
-	pl.append( Player(3,name='Coline'))
-	pl.append( Player(4,name='Quentin'))
+	pl.append(Player(0,PiGame.GPIO_player_buttons[0], PiGame.GPIO_player_leds[0], name="Clara"))
+	#pl.append( Player(1,name='Inès'))
+	#pl.append(Player(2,name='Dorian'))
+	#pl.append( Player(3,name='Coline'))
+	#pl.append( Player(4,name='Quentin'))
 	#pl.append( Player(5,name='Remi')) #do not use the 6th player with a RPI 1 : GPIO6 writing crashes the system
 	for p in pl:
 		the_game.add_player(p)
