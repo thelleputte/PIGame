@@ -227,6 +227,7 @@ class InitPlayersState(PigState):
 				self.game.add_player(player)
 				dummy_players.remove(player)
 				print('player {} has been added to the game'.format(player.name))
+				self.game.send_message(self.game.registred_interfaces, self.game.update_status_message())
 				self.set_player_light(player, '1')
 			if finished or not len(dummy_players):
 				break #if there are no more dummy players or if ack has been pressed exit the while loop
