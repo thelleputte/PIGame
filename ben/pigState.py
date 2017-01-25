@@ -6,6 +6,7 @@ from subprocess import call
 import json
 import socket
 import random
+from player import *
 
 def merge_two_dicts(x, y):
     """Given two dicts, merge them into a new dict as a shallow copy."""
@@ -57,7 +58,7 @@ class PigState():
 			print("gpio{} exists".format(gpio))
 		else:
 			retVal = open(PigState.BASEDIR + 'export', 'w')
-			retVal.write(gpio)
+			retVal.write(str(gpio))
 			retVal.close()
 		return path
 
@@ -115,11 +116,11 @@ class InitState(PigState):
 		#call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 		#configure all possible players GPIO as they have to be active for the registration procedure
 		for b in self.game.GPIO_player_buttons :
-			print("init gpio" + str(b))
+			#print("init gpio" + str(b))
 			self.player_button_configure_gpio(b)
 		for l in self.game.GPIO_player_leds:
 			self.player_light_configure_gpio(l)
-			print("init gpio" + str(l))
+			#print("init gpio" + str(l))
 		
 	def handle_state(self):
 		super(InitState, self).handle_state()
@@ -153,9 +154,87 @@ class InitPlayersState(PigState):
 	def handle_state(self):
 		super(InitPlayersState, self).handle_state()
 		#here we have to implement the player registration procedure
+		#first ligth on and off all players buttons to show your are waiting for player init
+		dummy_players = list()
+		for i in range(len(self.game.GPIO_player_leds)):
+			dummy_players.append(Player(i, self.game.GPIO_player_buttons[i], self.game.GPIO_player_leds[i], "Player_{}".format(i)))
 
-		#then go to the first question
-		self.game.set_state(self.game.ask_question_state)
+		if not self.game.simu:
+			finished = False
+		else:
+			finished = True #players have to be hard configured in simulation mode
+		while True:
+			#0.5s blink
+			for p in dummy_players:
+				self.set_player_light(p, '1')
+			time.sleep(0.5)
+			for p in dummy_players:
+				self.set_player_light(p, '0')
+
+			input_gpios = dict()
+			epoll = select.epoll()
+			for p in dummy_players:
+				fd = open(self.get_gpio_value_path(p.button), 'r')
+				input_gpios[fd.fileno()] = {'fd': fd, 'player': p}
+				epoll.register(fd.fileno(), select.EPOLLPRI)  # demons
+				fd.read()
+			ack = open(self.game.ack_buttons["ack_button"]["path"] + "/value", 'r')
+			epoll.register(ack.fileno(), select.EPOLLPRI)
+			ack.read()
+			ack_socket = PigSocket(self.game.socket_ports['ack'])
+			# ack_socket.listen()
+			epoll.register(ack_socket.fileno, select.EPOLLIN)
+
+			player = None
+			events = epoll.poll(-1)
+			for fileno, event in events:
+				print("longueur de events = {}".format(len(events)))
+				if fileno == ack.fileno():
+					#the game may begin
+					ack.read()
+					# debouncing :
+					debounce_buffer = ['1\n'] * 5
+					while '1\n' in debounce_buffer:
+						ack.seek(0, 0)
+						debounce_buffer.append(nack.read())
+						debounce_buffer.pop(0)
+						time.sleep(0.01)
+					finished = True
+					break
+				if fileno == ack_socket.fileno:
+					s = ack_socket.accept()
+					# I don't mind what is the information as I now it from the used port
+					# works with python to python but not with browser that retries
+					# so we can reply whith a generic http 200 code
+					s.send(self.generic_http_response)
+					# still buggy with direct browser call due to favicon.ico subrequest.  What about javascript ajax style request ?
+					s.close()
+					finished = True
+					break
+				#as no ack/ack_socket has been detected it should be a player
+				player = input_gpios[fileno]['player']
+				break
+			#close everything
+			for f in input_gpios:
+				epoll.unregister(input_gpios[f]["fd"])
+				input_gpios[f]["fd"].close()
+			epoll.unregister(ack.fileno())
+			epoll.unregister(ack_socket.fileno)
+			ack.close()
+			ack_socket.close()
+			# add ther player to the game
+			if player :
+				self.game.add_player(player)
+				dummy_players.remove(player)
+				print('player {} has been added to the game'.format(player.name))
+				self.set_player_light(player, '1')
+			if finished or not len(dummy_players):
+				break #if there are no more dummy players or if ack has been pressed exit the while loop
+		if len(self.game.players):
+			# then go to the first question
+			self.game.set_state(self.game.ask_question_state)
+		else: #no players in the game re-init please
+			self.game.set_state(self.game.init_state)
 
 class AskQuestionState(PigState):
 	def __init__(self, game):
@@ -422,8 +501,9 @@ class WaitForAnswerAckState(PigState):
 		super(WaitForAnswerAckState, self).handle_state()
 		val = self.wait_ack()
 		if self.game.fastest_player:
-			f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio[1]),'w')
-			f.write("0")
+			# f = open("/sys/class/gpio/gpio{}/value".format(self.game.fastest_player.gpio[1]),'w')
+			# f.write("0")
+			self.set_player_light(self.game.fastest_player,status='0')
 		if val is True :
 			print("good answer")
 			#give the point
