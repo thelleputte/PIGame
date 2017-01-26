@@ -1,6 +1,7 @@
 import os
 import sys
 import random
+
 class QuestionLoader:
 	def __init__(self, question_file='easy1.txt', question_dir='Questions'):
 		self.load_question_file(question_file=question_file, question_dir=question_dir);
@@ -25,7 +26,7 @@ class QuestionLoader:
 
 	def get_question_answer(self, remove=1):
 		if not len(self.questions):
-			raise EmptyQuestionList('no more questions')
+			raise EmptyQuestionListException('no more questions')
 		r = random.randrange(len(self.questions))
 		print("r is {}".format(r) )
 		(q,a) = (self.questions[r], self.answers[r])
@@ -36,7 +37,7 @@ class QuestionLoader:
 		return (q,a)
 
 
-class EmptyQuestionList(Exception):
+class EmptyQuestionListException(Exception):
     pass
 
 if __name__ == '__main__':

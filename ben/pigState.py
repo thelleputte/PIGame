@@ -7,6 +7,7 @@ import json
 import socket
 import random
 from player import *
+from questionLoader import *
 
 def merge_two_dicts(x, y):
     """Given two dicts, merge them into a new dict as a shallow copy."""
@@ -124,6 +125,12 @@ class InitState(PigState):
 		
 	def handle_state(self):
 		super(InitState, self).handle_state()
+		#demons we should perhaps manage game.question_dir
+		if self.game.question_file:
+			self.game.questions = QuestionLoader(game.question_file)
+		else:
+			self.game.questions = QuestionLoader()
+
 		self.game.communication_socket.start()
 		#self.game.set_state(self.game.wait_for_answer_state)
 		self.game.set_state(self.game.init_players_state)
@@ -246,8 +253,14 @@ class AskQuestionState(PigState):
 		super(AskQuestionState, self).handle_state()
 		#reset the valid player list.
 		self.game.valid_players = list(self.game.players) #copy of the player list
+		try:
+			(q,a) = self.game.questions.get_question_answer(remove=1)
+		except EmptyQuestionListException:
+			print("hehehe no more questions !! we should go to end of the game state... and notify the interface")
+			(q,a)=("in n'y a plus de question", "ni de réponse\n d'ailleurs")
+			#demons !!!! end of the game no more questions
 		#question should be updated when an answer is ack or nacked
-		self.game.send_message(self.game.registred_interfaces, self.game.update_question_message())
+		self.game.send_message(self.game.registred_interfaces, self.game.update_question_message(question=q, answer=a))
 		# self.game.send_message(self.game.registred_interfaces, json.dumps(self.game.question_message).encode('utf-8'))
 		self.game.set_state(self.game.wait_for_answer_state)
 
