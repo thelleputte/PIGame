@@ -4,7 +4,25 @@ Combien un chien a-t-il de griffe(s) sur ses pattes ?
 20
 Le chien miaule ou aboie ?
 Aboie
-Le poisson respire-t-il sous l'eau
+Le poisson respire-t-il sous l'eau ?
 oui
-Quel animal ne sait pas nager ? Le poisson\n la grenouille\n le paillon?
+Quel animal ne sait pas nager ? <br> Le poisson<br> la grenouille<br> le paillon ?
 Le papillon
+Qui est le parrain d'Inès ?
+Benoît
+De quel intrument joue Benoît ?
+Guitare
+Quel est le nom de l'ami d'Astérix ?
+Obelix
+Quel est le prénom du roi lion ?
+Simba
+Quel est le nom de l'ours dans le livre de la jungle ?
+Baloo
+Combien de pattes a la foumi ?
+6
+Lequel de ces 3 plats n'est pas Italien?<br> La Pizza<br> Les spaghettis<br> Les moules frites
+Les moules frites
+Mozart était-il<br> Peintre<br> Musicien
+Musicien
+Qui est le plus lourd ?<br> La baleine <br> l'éléphant
+La baleine (jusqu'à 200t alors que l'éléphantpèse environ ( à 6t)
