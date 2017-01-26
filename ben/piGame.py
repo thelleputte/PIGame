@@ -15,6 +15,8 @@ class PiGame():
 	def __init__(self):
 		#simulation flag
 		self.simu = False
+		self.question_file = None
+		self.question_dir = None
 
 		#players infos
 		self._nb_players = 0
@@ -175,6 +177,8 @@ if __name__ == '__main__':
 	the_game = PiGame()
 	if len(sys.argv) > 1:
 		the_game.simu = str(sys.argv[1])
+	if len(sys.argv)>2:
+		the_game.question_file = str(sys.argv[2])
 	#the_game.nb_players = 1
 	if the_game.simu:
 		pl=list()

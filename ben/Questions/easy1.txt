@@ -1,0 +1,10 @@
+Combien le chat a-t-il d'yeux ?
+2
+Combien un chien a-t-il de griffe(s) sur ses pattes ?
+20
+Le chien miaule ou aboie ?
+Aboie
+Le poisson respire-t-il sous l'eau
+oui
+Quel animal ne sait pas nager ? Le poisson\n la grenouille\n le paillon?
+Le papillon
