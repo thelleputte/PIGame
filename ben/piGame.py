@@ -98,15 +98,17 @@ class PiGame():
 			# or doing the register when we need to send or receive a message is ok too ?
 			#self.communication_epoll.register(open_socket[0].fileno(),select.EPOLLIN)
 
-			#sse try
-			# self.send_message([open_socket],"HTTP/1.1 200 OK\n"
-			# 								"Content-Type: text/event-stream;charset=UTF-8\n"
-			# 								"Access-Control-Allow-Origin: *\n\n"
-			# 								"id: <any_id>\nevent: question\n"
-			# 								"data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8'))
 			self.send_message([open_socket],self.update_status_message())
-
 			#send status on new connection (to all peers ?)
+			if self.state is self.ask_question_state or self.state is self.wait_for_answer_state \
+				or self.state is self.handle_answer_state or self.state is self.wait_for_answer_ack_state:
+				#we should re-send the question
+				print("resend the question to the new interface")
+				question_message = self.event_header + \
+								   "id: <any_id>\n" \
+								   "event: question\n" \
+								   "data: {}\n\n".format(json.dumps(self.question_message)).encode('utf-8')
+				self.send_message([open_socket], question_message)
 			#self.update_status_message()
 			#self.send_message([open_socket],json.dumps(self.status_message).encode('utf-8'))
 			#the respective decoding syntax is
