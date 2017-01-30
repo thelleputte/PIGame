@@ -35,6 +35,12 @@ class S(BaseHTTPRequestHandler):
 		print(S.the_game)
 		#todo : implement the API here to change player names or remove players from the game !!
 		# The key command line to test  curl -H "Content-Type: application/json" -X POST -d '{"username":"xyz","password":"xyz"}' http://localhost:10005
+		if data["command"]=="set_name":
+			player_id = data["args"]["id"]
+			new_name = data["args"]["name"]
+			players = S.the_game.players
+			player = [p for p in players if p.id == player_id][0]
+			player.name = new_name
 		return
 
 class RestApi(Thread):
