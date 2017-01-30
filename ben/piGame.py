@@ -1,6 +1,7 @@
 from pigState import *
 from player import *
 from socketListener import *
+from restApi import *
 import select
 import json
 import sys
@@ -90,6 +91,8 @@ class PiGame():
 		print("set the communication socket")
 		self.communication_socket = SocketListener(ip="0.0.0.0", port=10000, game=self, nb_conn=10) 
 		self.communication_epoll = select.epoll()
+		self.apiSocket = RestApi(self)
+		self.apiSocket.start()
 		
 	def register_socket(self, open_socket):
 		self.registred_interfaces.append(open_socket)
