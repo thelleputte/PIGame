@@ -389,7 +389,14 @@
 				@Nikos Most of the interface display logic should be done here depending on the 
 				state received in the status message.
 				The score update should also apply here from the score field of the status message
+				=> use updateScore(player_id, score)
 			  */
+			  //update the scores from incomming status message
+			  for (i in data["player ids"]){
+				console.log("player id = "+i);
+				updateScore(parseInt(i)+1,data["scores"][i]);
+			  }
+			  
 			  if (data["state"] == "wait_for_answer_ack"){
 				//activate answers buttons
 				$("#correct").prop('disabled', false);
@@ -515,7 +522,7 @@
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);	
 			$.ajax({url: "http://"+ document.location.hostname +":10001"});
-			addPoints();
+			//addPoints();
 			//console.log('Taking a break...');
 			//await sleep(1000);
 			//console.log('One second later');
@@ -561,6 +568,32 @@
 			}
 		}
 
+		
+		function updateScore(player, score){
+
+			//var curWidth = $("#pb" + currentPlayerID).width();
+			//var parentWidth = $("#pb" + currentPlayerID).offsetParent().width();
+			//var curPoints = 100*curWidth/parentWidth;
+			//currentPlayerID=1;
+			var curScore = Math.round($("#pb" + player).width() / $("#pb" + player).parent().width() * 100);
+			document.getElementById("result").innerHTML += "Points actuel: " + curScore + "<br>";
+			//alert (newPoints);
+			var maxScore = 10;
+			score = score/maxScore*100;
+			if (score == curScore){
+				return;
+			}
+			if (score <= 100) {
+				document.getElementById("result").innerHTML += "Nouveaux points: " + score + "<br>";
+				console.log("update score player id "+player+"score "+score)				
+				document.getElementById("pb" + player).innerHTML = score;
+				// in jQuery
+				$("#pb" + player).css("width", score + "%");					
+			}
+			if (score >= 100) {	
+				$("#pg" + player).removeClass("active");
+			}
+		}
 		//right way of doing a sleep
 		//use of asynchronous function
 		//await can only be executed in functions prefixed with the async keyword. Runkit wraps your code in an async function before executing it. 
