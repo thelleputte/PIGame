@@ -32,7 +32,7 @@ class S(BaseHTTPRequestHandler):
 		data = json.loads(self.data_string)
 		print ("{}".format(data))
 		self.wfile.write('OK\n\n'.encode('utf-8'))
-		print(S.the_game)
+		##print(S.the_game)
 		#todo : implement the API here to change player names or remove players from the game !!
 		# The key command line to test  curl -H "Content-Type: application/json" -X POST -d '{"username":"xyz","password":"xyz"}' http://localhost:10005
 		if data["command"]=="set_name":
@@ -41,6 +41,12 @@ class S(BaseHTTPRequestHandler):
 			players = S.the_game.players
 			player = [p for p in players if p.id == player_id][0]
 			player.name = new_name
+		# what are the other commands ?
+		# remove player => a player will be removed from the game (have to check that in details to avoid errors during the current turn)
+		# load question file 
+
+		#before leaving this method, update the status message and send it to all listeners to get them up to date.
+		S.the_game.send_message(S.the_game.registred_interfaces, S.the_game.update_status_message())
 		return
 
 class RestApi(Thread):
