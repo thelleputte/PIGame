@@ -251,6 +251,10 @@ class AskQuestionState(PigState):
 
 	def handle_state(self):
 		super(AskQuestionState, self).handle_state()
+		for p in self.game.players_to_remove:
+			self.game.remove_player(p)
+		#all the players to be removed have been removed => reset the list
+		self.game.players_to_remove =list();
 		#reset the valid player list.
 		self.game.valid_players = list(self.game.players) #copy of the player list
 		try:

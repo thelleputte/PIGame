@@ -24,6 +24,7 @@ class PiGame():
 		self.players = list();#to be updated
 		self.valid_players = list();# list of players that may answer
 		self.fastest_player = None
+		self.players_to_remove = list()# list of player that will be removed from the game at next question
 
 		#states
 		self.interface_init_state = InterfaceInitState(self)
@@ -173,6 +174,12 @@ class PiGame():
 		self.players.append(player)
 		self.valid_players.append(player)
 		self.nb_players +=1
+
+	def remove_player(self, player):
+		self.players.remove(player)
+		#if the remove is done before copying the player list in valid_players we don't have to remove from valid_players
+		#self.valid_players.append(player)
+		self.nb_players -= 1
 
 	def __str__(self):
 		#print("we aer here")
