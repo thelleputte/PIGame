@@ -26,3 +26,5 @@ Mozart était-il<br> Peintre<br> Musicien
 Musicien
 Qui est le plus lourd ?<br> La baleine <br> l'éléphant
 La baleine (jusqu'à 200t alors que l'éléphant pèse environ 6t)
+<img src = ben/Questions/grand-schtroumpf.png> Qui suis-je ?
+Le Grand Schtroumpf

@@ -611,7 +611,26 @@
 			console.log('Two second later');
 		}
 		*/
-			
+		
+
+		/*
+		 *@ Nikos : Use this fucking function to change the name of a player.  
+		 *I sait fucking function as it forced me to change a lot in server side to allow cross-site POST method
+		 *indeed Chrome first sends OPTION HTML request to know if POST will succeed in CORS context. 
+		 *So I had to reply correctly to the OPTION Request first
+		 *The remove player function should be implemented similarly (the definition is in restApi.py, do not change python side plz)
+		*/
+		function change_name(player_id, new_name){
+			console.log("change name : player"+player_id+" new_name "+new_name);
+			json_data=JSON.stringify({"command":"set_name","args":{"id":player_id,"name":new_name}});
+			$.ajax({method: 'POST',
+					url: "http://"+ document.location.hostname +":10005",
+					dataType: 'json',
+					contentType: "application/json; charset=utf-8",
+					data: json_data});
+			return;
+			//startListeners();//do we need this ? as they are started from start_game button
+		}
 	</script>
 
 	<script>

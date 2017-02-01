@@ -9,24 +9,33 @@ class S(BaseHTTPRequestHandler):
 	def _set_headers(self):
 		self.send_response(200)
 		self.send_header('Content-type', 'text/html')
+		self.send_header('Access-Control-Allow-Origin', '*')
+		#self.end_headers()
+	def do_OPTIONS(self):
+		print('mm fucking CORS')
+		#self.send_header('Content-length', 0)
+		self._set_headers()
+		self.send_header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
+		self.send_header('Access-Control-Allow-Headers','X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept')
 		self.end_headers()
-
 	def do_GET(self):
 		#we don't want to send anything
-		self.send_header('Content-length', 0)
 		self._set_headers()
+		self.send_header('Content-length', 0)
+		self.end_headers()
 		#f = open("index.html", "r")
 
 		#self.wfile.write(f.read())
 
 	def do_HEAD(self):
 		self._set_headers()
+		self.end_headers()
 
 	def do_POST(self):
 		self._set_headers()
 		print("in post method")
 		self.data_string = self.rfile.read(int(self.headers['Content-Length'])).decode("utf-8")
-		self.send_response(200)
+		#self.send_response(200)
 		self.end_headers()
 
 		data = json.loads(self.data_string)
