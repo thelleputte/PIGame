@@ -70,3 +70,20 @@ Pour la gestion financière du projet, les dépenses c'est par ici:
     
     https://www.tricount.com/fr/ZeqcgcDKGdrdPgvvW
 
+## pour jouer :
+
+	pig
+	cd ben
+	sudo python3 piGame.py 1
+	#le 1 est le flag de simulation => les joueurs répondent sans qu'on ne doive appuyer sur un bouton.
+	# ATTENTION, la partie va etre bloquée dans l'état init_players, pour la débloquer il faut envoyer une requète vers le port 10001 le plus simpl est de créer une autre session ssh vers le pig et exécuter ceci
+	curl http://localhost:10001
+	La partie commence, enjoy the game.
+
+## Les questions.
+	.le fichier ben/Questions/easy1.txt est un exemple de questions.  Il faut absolument éviter de finir le fichier par une ligne vide. 
+	ceci platerait probablement la partie si la dernière question (la ligne vide) était posée
+	.L'encodage des questions doit etre utf-8 et le formalisme EOL doit etre celui de Linux (LF)
+	.Les balises html sont permises dans les fichiers de questions (c'est surement une faille de sécurité mais on s'en fout royalement)
+	.il est possible de charger un autre set de questions en passant le chemin vers le fichier texte en ligne de commande lors du démarrage du jeu.
+	une version HTML (genre un bouton load question_file) devrait voir le jour dans la version 3.0 ;-)
