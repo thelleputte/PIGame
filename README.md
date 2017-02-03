@@ -16,6 +16,10 @@ Pour initier votre repository git en local, c'est ceci:
     cd /le-repertoire-parent-de-votre-repertoir-souhaité
     git clone https://github.com/thelleputte/PIGame.git votre-repertoire-souhaité
     
+ou (si curl ou sa lib est manquante sur la machine client (e.g. Synology))
+
+    git clone git://github.com/thelleputte/PIGame.git votre-repertoire-souhaité
+    
 Une cheat sheet? C'est ici:
 
     https://services.github.com/kit/downloads/github-git-cheat-sheet.pdf
