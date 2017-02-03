@@ -376,15 +376,15 @@
 		}
 		
 		function listenStatus(source){
-			// Event listener for general message
-			console.log("Listening for message..");	
+			// Event listener for status
+			console.log("Listening for status..");	
 			// in JSON format
 			source.addEventListener("status", function(event) {
 			  console.log("status message to parse: " + event.data);
 			  var data = JSON.parse(event.data);
-			  console.log(data["state"], data["player names"], data["scores"]);
+			  console.log("Status: " + data["state"],"Players: " + data["player names"],"Scores: " + data["scores"]);
 			  //each message contains the lastEventId property
-			  console.log(event.lastEventId);
+			  console.log("Last id: " + event.lastEventId);
 			  /*
 				@Nikos Most of the interface display logic should be done here depending on the 
 				state received in the status message.
@@ -393,7 +393,7 @@
 			  */
 			  //update the scores from incomming status message
 			  for (i in data["player ids"]){
-				console.log("player id = "+data["player ids"][i]);
+				//console.log("player id = "+data["player ids"][i]);
 				updateScore(parseInt(data["player ids"][i])+1,data["scores"][i]);
 			  }
 			  
@@ -578,20 +578,23 @@
 			var curScore = Math.round($("#pb" + player).width() / $("#pb" + player).parent().width() * 100);
 			document.getElementById("result").innerHTML += "Points actuel: " + curScore + "<br>";
 			//alert (newPoints);
-			var maxScore = 10;
+			var maxScore = 2;
 			score = score/maxScore*100;
 			if (score == curScore){
 				return;
 			}
 			if (score <= 100) {
 				document.getElementById("result").innerHTML += "Nouveaux points: " + score + "<br>";
-				console.log("update score player id "+player+"score "+score)				
+				console.log("update score player id "+player+" to score "+score)				
 				document.getElementById("pb" + player).innerHTML = score;
 				// in jQuery
 				$("#pb" + player).css("width", score + "%");					
 			}
 			if (score >= 100) {	
 				$("#pg" + player).removeClass("active");
+			        $("#nextQ").addClass("hidden");
+			        document.getElementById("startStop").innerHTML = "On joue encore ?";
+        			document.getElementById("startStop").onclick = startGame;	
 			}
 		}
 		//right way of doing a sleep
