@@ -113,7 +113,7 @@ class InitState(PigState):
 		#call(["pull_config/pull_config", "0x00", "0x00420A50", "0"])
 		#do the same for ack_b uttons
 		self.game.ack_buttons = self.configure_ack_buttons()
-		self.game.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}
+		#self.game.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}#defined in piGame
 		#call(["pull_config/pull_config", "0x02", "0x04100000", "0"])
 		#configure all possible players GPIO as they have to be active for the registration procedure
 		for b in self.game.GPIO_player_buttons :
@@ -525,18 +525,20 @@ class WaitForAnswerAckState(PigState):
 		if val is True :
 			print("good answer")
 			#give the point
-			self.game.fastest_player.score +=1
+			self.game.fastest_player.score +=1			
 			#reset the fastest player
 			self.game.answer_from(None) 
 			#go to next state
-			self.game.set_state(self.game.ask_question_state)
+			if max([s.score for s in self.game.players])>= self.game.max_score:
+				self.game.set_state(self.game.end_game_state)
+			else:
+				self.game.set_state(self.game.ask_question_state)
 		elif val is False:
 			print("bad answer")
 			#bad answer, go to wait for answer
 			self.game.valid_players.remove(self.game.fastest_player)
 			self.game.answer_from(None)
 			#go to next state
-			#demons : should check if there are still players to play
 			if self.game.valid_players :
 				self.game.set_state(self.game.wait_for_answer_state)
 			else: #no more players in the list => next question please
@@ -546,7 +548,7 @@ class WaitForAnswerAckState(PigState):
 			print("next question please")
 			#reset the fastest player
 			self.game.answer_from(None)
-			#demons : we should reset the list of player as we go to next question
+			#demons : we should reset the list of player as we go to next question do we ?
 			#go to next state
 			self.game.set_state(self.game.ask_question_state)
 
@@ -554,6 +556,82 @@ class AnswerAckState(PigState):
 	def __init__(self, game):
 		PigState.__init__(self, game)
 		self.name = "answer_ack"
+		
+class EndGameState(PigState):
+	def __init__(self, game):
+		PigState.__init__(self, game)
+		self.name = "end_game"
+	def reset(self):
+		#demons !!! we should reset a lot of things and switch to another state
+		print("Reset Not implemented yet...")
+		pass;
+	def handle_state(self):
+		super(EndGameState, self).handle_state()
+		fd = list()
+		epoll = select.epoll()
+		registered_buttons = dict() 
+		registered_sock = dict()
+		fd.append((open(self.game.ack_buttons["ack_button"]["path"]+"/value",'r'),0))
+		fd.append((open(self.game.ack_buttons["nack_button"]["path"]+"/value",'r'),1))
+		for i in range(len(fd)):
+			epoll.register(fd[i][0].fileno(),select.EPOLLPRI)
+			fd[i][0].read()
+			registered_buttons[fd[i][0].fileno()] = {'button':i, 'file_desc' : fd[i][0]}
+		
+		#create sockets on ack 
+		ack_socket = PigSocket(self.game.socket_ports['ack'])
+		#no nack_socket at the end of the game if you want to shutdown press red button on the pig
+		#nack_socket = PigSocket(self.game.socket_ports['nack'])
+		
+		epoll.register(ack_socket.fileno, select.EPOLLIN)
+		registered_sock[ack_socket.fileno] = {'button' :'ack_socket', 'file_desc':ack_socket}
+		#epoll.register(nack_socket.fileno, select.EPOLLIN)	
+		#registered_sock[nack_socket.fileno] = {'button' :'nack_socket', 'file_desc':nack_socket}
+		pressed_button = list()
+		print(registered_sock)
+		events = epoll.poll(-1)
+		print("length of events in wait_ack {}".format(len(events)))
+		for fileno, event in events:
+			if fileno in registered_buttons:
+				registered_buttons[fileno]['file_desc'].read()
+				registered_buttons[fileno]['file_desc'].seek(0,0)
+				active_file = registered_buttons[fileno]
+				#debouncing :
+				debounce_buffer = ['1\n']*5
+				while '1\n' in debounce_buffer:
+					#f[0].seek(0,0)
+					registered_buttons[fileno]['file_desc'].seek(0,0)
+					debounce_buffer.append(registered_buttons[fileno]['file_desc'].read())
+					debounce_buffer.pop(0)
+					#print(debounce_buffer)
+					time.sleep(0.01)	
+		#keep only the pressed button in epoll list
+		#rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
+		#for f in rem:
+		#	epoll.unregister(f[0].fileno())
+		#epoll.unregister(active_file[0].fileno())
+		#events = epoll.poll(self.next_question_timeout)
+			if fileno in registered_sock:
+				active_file = registered_sock[fileno]
+				s= active_file['file_desc'].accept()
+				s.send(self.generic_http_response)
+				s.close()
+							
+		
+		#unregister all
+		# for f in registered_buttons.values():
+			# f[file_desc].close()
+		for f in merge_two_dicts(registered_buttons, registered_sock):		#merge of both dict
+			epoll.unregister(f)
+		epoll.close()
+		if active_file['button'] == "ack_button" or active_file['button'] == "ack_socket":
+			print("yesss ils en redemandent")
+			self.reset();
+		if active_file['button'] == "nack_button":
+			print("go to sleep !!!")
+			call(["poweroff"])
+		
+
 
 class PigSocket():
 	def __init__(self, port, bind_address="0.0.0.0", nb_conn=1):

@@ -18,6 +18,8 @@ class PiGame():
 		self.simu = False
 		self.question_file = None
 		self.question_dir = None
+		self.questions = None
+		self.max_score = 1
 
 		#players infos
 		self._nb_players = 0
@@ -34,10 +36,12 @@ class PiGame():
 		self.wait_for_answer_state = WaitForAnswerState(self)
 		self.handle_answer_state = HandleAnswerState(self)
 		self.wait_for_answer_ack_state = WaitForAnswerAckState(self)
+		self.end_game_state = EndGameState(self)
 		self.state = self.interface_init_state
 
 		#sockets
 		self.registred_interfaces = list()
+		self.socket_ports={'ack':10001, 'nack':10002,'next':10003,'end':10004}
 
 		#status message
 		self.status_message={"type" : "status","state":"",

@@ -144,57 +144,56 @@
 
 	<div class="container">
 		<section class="row">
-			<div class="col-xs-1">
-				<!--<p id="player0">Clara</p>-->
-				<div id="player1">Clara</div>
+			<div class="col-xs-2">
+				<div id="player1" class="hidden" onClick="this.contentEditable='true';">Player1</div>
 			</div>
-			<div class="col-xs-11">
-				<div id="pg1" class="progress progress-striped active">
+			<div class="col-xs-10">
+				<div id="pg1" class="progress progress-striped active hidden">
 					<div id="pb1" class="progress-bar"></div>
 					<div id="pourcentage" class="pull-right"></div>
 				</div>
 			</div>
-			<div class="col-xs-1">
-				<p id="player2">Inès</p>
+			<div class="col-xs-2">
+				<p id="player2" class="hidden">Player2</p>
 			</div>
-			<div class="col-xs-11">
-				<div id="pg2" class="progress progress-striped active">
+			<div class="col-xs-10">
+				<div id="pg2" class="progress progress-striped active hidden">
 					<div id="pb2" class="progress-bar progress-bar-danger"></div>
 					<div id="pourcentage" class="pull-right"></div>
 				</div>
 			</div>
-			<div class="col-xs-1">
-				<p id="player3">Dorian</p>
+			<div class="col-xs-2">
+				<p id="player3" class="hidden">Player3</p>
 			</div>
-			<div class="col-xs-11">
-				<div id="pg3" class="progress progress-striped active">
+			<div class="col-xs-10">
+				<div id="pg3" class="progress progress-striped active hidden">
 					<div id="pb3" class="progress-bar progress-bar-warning"></div>
 					<div id="pourcentage" class="pull-right"></div>
 				</div>
 			</div>
-			<div class="col-xs-1">
-				<p id="player4">Coline</p>
+			<div class="col-xs-2">
+				<p id="player4" class="hidden">Player4</p>
 			</div>
-			<div class="col-xs-11">
-				<div id="pg4" class="progress progress-striped active">
+			<div class="col-xs-10">
+				<div id="pg4" class="progress progress-striped active hidden">
 					<div id="pb4" class="progress-bar progress-bar-perso"></div>
 					<div id="pourcentage" class="pull-right"></div>
 				</div>
 			</div>
-			<div class="col-xs-1">
-				<p id="player5">Quentin</p>
+			<div class="col-xs-2">
+				<p id="player5" class="hidden">Player5</p>
 			</div>
-			<div class="col-xs-11">
-				<div id="pg5" class="progress progress-striped active">
+			<div class="col-xs-10">
+				<div id="pg5" class="progress progress-striped active hidden">
 					<div id="pb5" class="progress-bar progress-bar-success"></div>
 					<div id="pourcentage" class="pull-right"></div>
 				</div>
 			</div>
-			<div class="col-xs-1">
-				<p id="player6">Remy</p>
+			<div class="col-xs-2">
+				<p id="player6" class="hidden">Player6</p>
 			</div>
-			<div class="col-xs-11">
-				<div id="pg6" class="progress progress-striped active">
+			<div class="col-xs-10">
+				<div id="pg6" class="progress progress-striped active hidden">
 					<div id="pb6" class="progress-bar progress-bar-info"></div>
 					<div id="pourcentage" class="pull-right"></div>
 				</div>
@@ -276,6 +275,25 @@
 		        */	            
 		   });
 		});
+		
+		//right way of doing a sleep
+		//use of asynchronous function
+		//await can only be executed in functions prefixed with the async keyword. Runkit wraps your code in an async function before executing it. 
+		//await only pauses the current async function
+		//the async/await feature lets the code explicitly wait for a promise to settle
+		//note tha promises are not supported by IE (tiens tiens..)
+
+		function sleep(ms) {
+  			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+		/*
+		async function sleepDemo() {
+			console.log('Taking a break...');
+			await sleep(2000);
+			console.log('Two second later');
+		}
+		*/		
+		
 	</script>
 	
 
@@ -307,14 +325,15 @@
 		}		
 
 		function startGame(){
-			document.getElementById("question").innerHTML = "Chargement of ze super game..";
+		//start directly at load of the page
+			document.getElementById("question").innerHTML = "Allez-y, tapez vos boutons..";
 			document.getElementById("startStop").innerHTML = "Arrêter le jeu";
 			document.getElementById("startStop").onclick = stopGame;	
 
 			//de-activate answers buttons
 			$("#correct").prop('disabled', true);
 			$("#incorrect").prop('disabled', true);
-			$(".hidden").removeClass("hidden");
+			//$(".hidden").removeClass("hidden");
 
 			startListeners('all');
 		}
@@ -375,7 +394,7 @@
 
 		}
 		
-		function listenStatus(source){
+		async function listenStatus(source){
 			// Event listener for status
 			console.log("Listening for status..");	
 			// in JSON format
@@ -396,7 +415,15 @@
 				//console.log("player id = "+data["player ids"][i]);
 				updateScore(parseInt(data["player ids"][i])+1,data["scores"][i]);
 			  }
-			  
+			  //set player names
+			  for (i in data["player ids"]){
+				player=parseInt(data["player ids"][i])+1;
+				$("#player"+player).removeClass("hidden");
+				$("#pg"+player).removeClass("hidden");
+				document.getElementById("player"+player).innerHTML = data["player names"][i];
+				//await sleep(1000);
+				//sleep(1000);
+			  }			  
 			  if (data["state"] == "wait_for_answer_ack"){
 				//activate answers buttons
 				$("#correct").prop('disabled', false);
@@ -578,7 +605,7 @@
 			var curScore = Math.round($("#pb" + player).width() / $("#pb" + player).parent().width() * 100);
 			document.getElementById("result").innerHTML += "Points actuel: " + curScore + "<br>";
 			//alert (newPoints);
-			var maxScore = 2;
+			var maxScore = 10;
 			score = score/maxScore*100;
 			if (score == curScore){
 				return;
@@ -591,30 +618,13 @@
 				$("#pb" + player).css("width", score + "%");					
 			}
 			if (score >= 100) {	
-				$("#pg" + player).removeClass("active");
+				$(".progress").removeClass("active");
 			        $("#nextQ").addClass("hidden");
 			        document.getElementById("startStop").innerHTML = "On joue encore ?";
         			document.getElementById("startStop").onclick = startGame;	
 			}
 		}
-		//right way of doing a sleep
-		//use of asynchronous function
-		//await can only be executed in functions prefixed with the async keyword. Runkit wraps your code in an async function before executing it. 
-		//await only pauses the current async function
-		//the async/await feature lets the code explicitly wait for a promise to settle
-		//note tha promises are not supported by IE (tiens tiens..)
-		/*
-		function sleep(ms) {
-  			return new Promise(resolve => setTimeout(resolve, ms));
-		}
-
-		async function sleepDemo() {
-			console.log('Taking a break...');
-			await sleep(2000);
-			console.log('Two second later');
-		}
-		*/
-		
+	
 
 		/*
 		 *@ Nikos : Use this fucking function to change the name of a player.  
