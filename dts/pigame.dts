@@ -1,0 +1,47 @@
+/dts-v1/;
+/plugin/;
+
+/{
+   compatible = "brcm,bcm2708";
+
+//   fragment@0 {
+//      target = <&gpio>;
+//     __overlay__ {
+//         light_buttons: light_buttons {
+//            brcm,pins = <4 17 22 9 11 6>;
+//            brcm,function = <1>; /* out */
+//            brcm,pull = <0>; /* no pull  on outputs*/
+//         };
+//      };
+//   };
+
+   fragment@1 {
+      target = <&gpio>;
+      __overlay__ {
+         push_buttons: push_buttons {
+            brcm,pins = 	<14 18 23 25 8  12 4 17 22 9 11 6 20 26>;
+            brcm,function = <0  0  0  0  0  0  1 1  1  1 1  1  0  0>; /* in then out for players and then ack nack*/
+            brcm,pull = 	<2  2  2  2  2  2  0 0  0  0 0  0  0  0>; /*  pull up on inputs no pull on out no pull on buttons that will be after a schmidt trigger*/
+         };
+      };
+   };
+   
+   fragment@2 {
+	 target = <&leds>;
+	 __overlay__ {
+		 pinctrl-names = "default";
+		 //pinctrl-0 = <&light_buttons>;
+		 pinctrl-0 = <&push_buttons>;
+	 };
+   };
+   
+   /*fragment@3 {
+	 target = <&leds>;
+	 __overlay__ {
+		 pinctrl-names = "default1";
+		 pinctrl-1 = <&push_buttons>;
+	 };
+   };*/
+  
+};
+

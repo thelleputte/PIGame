@@ -6,7 +6,7 @@ Le chien miaule ou aboie ?
 Aboie
 Le poisson respire-t-il sous l'eau ?
 oui
-Quel animal ne sait pas nager ? <br> Le poisson<br> la grenouille<br> le paillon ?
+Quel animal ne sait pas nager ? <br> Le poisson<br> la grenouille<br> le papillon ?
 Le papillon
 Qui est le parrain d'Inès ?
 Benoît
@@ -28,3 +28,9 @@ Qui est le plus lourd ?<br> La baleine <br> l'éléphant
 La baleine (jusqu'à 200t alors que l'éléphant pèse environ 6t)
 <img src = ben/Questions/grand-schtroumpf.png> Qui suis-je ?
 Le Grand Schtroumpf
+Quel insecte produit le miel ?
+L'abeille
+Bob l'éponge vit dans: <br> Une maison<br> Un appartement<br> Un ananas
+Un ananas
+Quel arbre décore-t-on pour noël? <br> Un chêne<br> Un sapin<br> Un chataigner
+Un sapin

@@ -8,7 +8,7 @@ import sys
 
 class PiGame():
 	#static definitions of USED PLAYERS GPIOS
-	# GPIO_player_buttons = 	[14, 18, 23, 25,  8, 112
+	# GPIO_player_buttons = 	[14, 18, 23, 25,  8, 12]
 	# GPIO_player_leds = 		[ 4, 17, 22,  9, 11,  6]
 	#these values on a RPI1 please
 	GPIO_player_buttons = 	[14, 18, 23, 25,  8]
@@ -19,7 +19,7 @@ class PiGame():
 		self.question_file = None
 		self.question_dir = None
 		self.questions = None
-		self.max_score = 1
+		self.max_score = 10
 
 		#players infos
 		self._nb_players = 0

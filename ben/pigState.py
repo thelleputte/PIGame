@@ -87,6 +87,7 @@ class PigState():
 
 	def set_player_light(self, player, status='1'):
 		fd = open(self.get_gpio_value_path(player.led), 'w')
+		#print ("write {} in {}".format(status, self.get_gpio_value_path(player.led)))
 		fd.write(status)
 		fd.close()
 
@@ -243,6 +244,8 @@ class InitPlayersState(PigState):
 			self.game.set_state(self.game.ask_question_state)
 		else: #no players in the game re-init please
 			self.game.set_state(self.game.init_state)
+		for p in self.game.players :
+			self.set_player_light(p,'0')
 
 class AskQuestionState(PigState):
 	def __init__(self, game):
