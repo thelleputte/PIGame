@@ -204,7 +204,7 @@ class InitPlayersState(PigState):
 					debounce_buffer = ['1\n'] * 5
 					while '1\n' in debounce_buffer:
 						ack.seek(0, 0)
-						debounce_buffer.append(nack.read())
+						debounce_buffer.append(ack.read())
 						debounce_buffer.pop(0)
 						time.sleep(0.01)
 					finished = True
@@ -339,14 +339,14 @@ class WaitForAnswerState(PigState):
 					nack.read()
 					self.game.answer_from(player)
 					print("Next Question Please !!")
-					self.game.set_state(self.game.wait_for_answer_state)
+					self.game.set_state(self.game.ask_question_state)
 					#debouncing :
-					debounce_buffer = ['1\n']*5
-					while '1\n' in debounce_buffer:
-						nack.seek(0,0)
-						debounce_buffer.append(nack.read())
-						debounce_buffer.pop(0)
-						time.sleep(0.01)
+					# debounce_buffer = ['1\n']*5
+					# while '1\n' in debounce_buffer:
+					# 	nack.seek(0,0)
+					# 	debounce_buffer.append(nack.read())
+					# 	debounce_buffer.pop(0)
+					# 	time.sleep(0.01)
 					break
 				if fileno == nack_socket.fileno or fileno == next_socket.fileno:
 					s=nack_socket.accept() if fileno == nack_socket.fileno else next_socket.accept()

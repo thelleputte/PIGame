@@ -145,7 +145,7 @@
 	<div class="container">
 		<section class="row">
 			<div class="col-xs-2">
-				<div id="player1" class="hidden" onClick="this.contentEditable='true';">Player1</div>
+				<div id="player1" class="hidden" onClick="this.contentEditable='true';" onFocusout="javascript:change_name(0, this.innerHTML)">Player1</div>
 			</div>
 			<div class="col-xs-10">
 				<div id="pg1" class="progress progress-striped active hidden">
@@ -154,7 +154,7 @@
 				</div>
 			</div>
 			<div class="col-xs-2">
-				<p id="player2" class="hidden">Player2</p>
+				<div id="player2" class="hidden" onClick="this.contentEditable='true';" onFocusout="javascript:change_name(1, this.innerHTML)">Player2</div>
 			</div>
 			<div class="col-xs-10">
 				<div id="pg2" class="progress progress-striped active hidden">
@@ -163,7 +163,7 @@
 				</div>
 			</div>
 			<div class="col-xs-2">
-				<p id="player3" class="hidden">Player3</p>
+				<div id="player3" class="hidden" onClick="this.contentEditable='true';" onFocusout="javascript:change_name(2, this.innerHTML)">Player3</div>
 			</div>
 			<div class="col-xs-10">
 				<div id="pg3" class="progress progress-striped active hidden">
@@ -172,7 +172,7 @@
 				</div>
 			</div>
 			<div class="col-xs-2">
-				<p id="player4" class="hidden">Player4</p>
+				<div id="player4" class="hidden" onClick="this.contentEditable='true';" onFocusout="javascript:change_name(3, this.innerHTML)">Player4</div>
 			</div>
 			<div class="col-xs-10">
 				<div id="pg4" class="progress progress-striped active hidden">
@@ -181,7 +181,7 @@
 				</div>
 			</div>
 			<div class="col-xs-2">
-				<p id="player5" class="hidden">Player5</p>
+				<div id="player5" class="hidden" onClick="this.contentEditable='true';" onFocusout="javascript:change_name(4, this.innerHTML)">Player5</div>
 			</div>
 			<div class="col-xs-10">
 				<div id="pg5" class="progress progress-striped active hidden">
@@ -190,7 +190,7 @@
 				</div>
 			</div>
 			<div class="col-xs-2">
-				<p id="player6" class="hidden">Player6</p>
+				<div id="player6" class="hidden" onClick="this.contentEditable='true';" onFocusout="javascript:change_name(5, this.innerHTML)">Player6</div>
 			</div>
 			<div class="col-xs-10">
 				<div id="pg6" class="progress progress-striped active hidden">
@@ -623,6 +623,7 @@
 			        document.getElementById("startStop").innerHTML = "On joue encore ?";
         			document.getElementById("startStop").onclick = startGame;	
 			}
+			glowReset();
 		}
 	
 
