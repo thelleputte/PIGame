@@ -79,8 +79,8 @@ class PigState():
 	def ack_button_configure_gpio(self, gpio):
 		#self.check_gpio(gpio)#demons to modify for uniformity
 		self.set_gpio_direction(gpio, "in")
-		self.set_gpio_active_low(gpio,"1") #if pulled up an active low comportment is more logic : button pressed = 1
-		self.set_gpio_trigger(gpio,"both")
+		self.set_gpio_active_low(gpio,"0") #if pulled up an active low comportment is more logic : button pressed = 1
+		self.set_gpio_trigger(gpio,"rising")
 
 	def get_gpio_value_path(self, gpio):
 		return PigState.BASEDIR + 'gpio' + str(gpio) + '/value'
