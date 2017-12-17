@@ -8,11 +8,11 @@ import sys
 
 class PiGame():
 	#static definitions of USED PLAYERS GPIOS
-	# GPIO_player_buttons = 	[14, 18, 23, 25,  8, 12]
-	# GPIO_player_leds = 		[ 4, 17, 22,  9, 11,  6]
+	GPIO_player_buttons = 	[14, 18, 23, 25,  8, 12]
+	GPIO_player_leds = 		[ 4, 17, 22,  9, 11,  6]
 	#these values on a RPI1 please
-	GPIO_player_buttons = 	[14, 18, 23, 25,  8]
-	GPIO_player_leds = 		[ 4, 17, 22,  9, 11]
+	#GPIO_player_buttons = 	[14, 18, 23, 25,  8]
+	#GPIO_player_leds = 		[ 4, 17, 22,  9, 11]
 	def __init__(self):
 		#simulation flag
 		self.simu = False
@@ -196,7 +196,8 @@ class PiGame():
 if __name__ == '__main__':
 	the_game = PiGame()
 	if len(sys.argv) > 1:
-		the_game.simu = str(sys.argv[1])
+		the_game.simu = int(sys.argv[1])
+		print("Simulation mode {}".format(the_game.simu))
 	if len(sys.argv)>2:
 		the_game.question_file = str(sys.argv[2])
 	#the_game.nb_players = 1

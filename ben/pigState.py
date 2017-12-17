@@ -128,7 +128,7 @@ class InitState(PigState):
 		super(InitState, self).handle_state()
 		#demons we should perhaps manage game.question_dir
 		if self.game.question_file:
-			self.game.questions = QuestionLoader(game.question_file)
+			self.game.questions = QuestionLoader(self.game.question_file)
 		else:
 			self.game.questions = QuestionLoader()
 
