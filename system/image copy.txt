@@ -1,0 +1,6 @@
+windows command line
+# to get the right device
+dd --list 
+#then
+dd bs=4096 count=456000 if=\\?\Device\Harddisk2\Partition0 of=pig_with_ap.img --progress
+
