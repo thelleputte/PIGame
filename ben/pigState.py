@@ -79,8 +79,8 @@ class PigState():
 	def ack_button_configure_gpio(self, gpio):
 		#self.check_gpio(gpio)#demons to modify for uniformity
 		self.set_gpio_direction(gpio, "in")
-		self.set_gpio_active_low(gpio,"1") #if pulled up an active low comportment is more logic : button pressed = 1
-		self.set_gpio_trigger(gpio,"both")
+		self.set_gpio_active_low(gpio,"0") #if pulled up an active low comportment is more logic : button pressed = 1
+		self.set_gpio_trigger(gpio,"rising")
 
 	def get_gpio_value_path(self, gpio):
 		return PigState.BASEDIR + 'gpio' + str(gpio) + '/value'
@@ -128,7 +128,7 @@ class InitState(PigState):
 		super(InitState, self).handle_state()
 		#demons we should perhaps manage game.question_dir
 		if self.game.question_file:
-			self.game.questions = QuestionLoader(game.question_file)
+			self.game.questions = QuestionLoader(self.game.question_file)
 		else:
 			self.game.questions = QuestionLoader()
 
@@ -201,12 +201,12 @@ class InitPlayersState(PigState):
 					#the game may begin
 					ack.read()
 					# debouncing :
-					debounce_buffer = ['1\n'] * 5
-					while '1\n' in debounce_buffer:
-						ack.seek(0, 0)
-						debounce_buffer.append(nack.read())
-						debounce_buffer.pop(0)
-						time.sleep(0.01)
+					# debounce_buffer = ['1\n'] * 5
+					# while '1\n' in debounce_buffer:
+					# 	ack.seek(0, 0)
+					# 	debounce_buffer.append(ack.read())
+					# 	debounce_buffer.pop(0)
+					# 	time.sleep(0.01)
 					finished = True
 					break
 				if fileno == ack_socket.fileno:
@@ -339,14 +339,14 @@ class WaitForAnswerState(PigState):
 					nack.read()
 					self.game.answer_from(player)
 					print("Next Question Please !!")
-					self.game.set_state(self.game.wait_for_answer_state)
+					self.game.set_state(self.game.ask_question_state)
 					#debouncing :
-					debounce_buffer = ['1\n']*5
-					while '1\n' in debounce_buffer:
-						nack.seek(0,0)
-						debounce_buffer.append(nack.read())
-						debounce_buffer.pop(0)
-						time.sleep(0.01)
+					# debounce_buffer = ['1\n']*5
+					# while '1\n' in debounce_buffer:
+					# 	nack.seek(0,0)
+					# 	debounce_buffer.append(nack.read())
+					# 	debounce_buffer.pop(0)
+					# 	time.sleep(0.01)
 					break
 				if fileno == nack_socket.fileno or fileno == next_socket.fileno:
 					s=nack_socket.accept() if fileno == nack_socket.fileno else next_socket.accept()
@@ -461,14 +461,14 @@ class WaitForAnswerAckState(PigState):
 				registered_buttons[fileno]['file_desc'].seek(0,0)
 				active_file = registered_buttons[fileno]
 				#debouncing :
-				debounce_buffer = ['1\n']*5
-				while '1\n' in debounce_buffer:
-					#f[0].seek(0,0)
-					registered_buttons[fileno]['file_desc'].seek(0,0)
-					debounce_buffer.append(registered_buttons[fileno]['file_desc'].read())
-					debounce_buffer.pop(0)
-					#print(debounce_buffer)
-					time.sleep(0.01)	
+				# debounce_buffer = ['1\n']*5
+				# while '1\n' in debounce_buffer:
+				# 	#f[0].seek(0,0)
+				# 	registered_buttons[fileno]['file_desc'].seek(0,0)
+				# 	debounce_buffer.append(registered_buttons[fileno]['file_desc'].read())
+				# 	debounce_buffer.pop(0)
+				# 	#print(debounce_buffer)
+				# 	time.sleep(0.01)
 		#keep only the pressed button in epoll list
 		#rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
 		#for f in rem:
@@ -600,14 +600,14 @@ class EndGameState(PigState):
 				registered_buttons[fileno]['file_desc'].seek(0,0)
 				active_file = registered_buttons[fileno]
 				#debouncing :
-				debounce_buffer = ['1\n']*5
-				while '1\n' in debounce_buffer:
-					#f[0].seek(0,0)
-					registered_buttons[fileno]['file_desc'].seek(0,0)
-					debounce_buffer.append(registered_buttons[fileno]['file_desc'].read())
-					debounce_buffer.pop(0)
-					#print(debounce_buffer)
-					time.sleep(0.01)	
+				# debounce_buffer = ['1\n']*5
+				# while '1\n' in debounce_buffer:
+				# 	#f[0].seek(0,0)
+				# 	registered_buttons[fileno]['file_desc'].seek(0,0)
+				# 	debounce_buffer.append(registered_buttons[fileno]['file_desc'].read())
+				# 	debounce_buffer.pop(0)
+				# 	#print(debounce_buffer)
+				# 	time.sleep(0.01)
 		#keep only the pressed button in epoll list
 		#rem = [f for f in fd if f[0].fileno() != pressed_button[0]]
 		#for f in rem:
