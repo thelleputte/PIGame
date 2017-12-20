@@ -1,0 +1,16 @@
+[Unit]
+Description=piGame
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/PIGame/PIGame/ben
+ExecStart=/bin/bash -c '/usr/bin/python piGame.py 0 larousse_junior.txt > last_game.log 2>&1'
+User=root
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+StandardOutput=file:/var/log/last_game.log
+StandardError=file:/var/log/last_game.err
+
+[Install]
+WantedBy=multi-user.target
